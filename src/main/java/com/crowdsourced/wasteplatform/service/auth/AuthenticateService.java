@@ -6,6 +6,7 @@ import com.crowdsourced.wasteplatform.dto.auth.response.LoginResponse;
 import com.crowdsourced.wasteplatform.dto.auth.response.TokenResponse;
 import com.crowdsourced.wasteplatform.dto.auth.response.UserProfileResponse;
 import com.crowdsourced.wasteplatform.entity.User;
+import com.crowdsourced.wasteplatform.entity.UserStatus;
 import com.crowdsourced.wasteplatform.exception.AppException;
 import com.crowdsourced.wasteplatform.exception.ErrorCode;
 import com.crowdsourced.wasteplatform.repository.UserRepository;
@@ -32,7 +33,7 @@ public class AuthenticateService {
         User user = userRepository.findByEmailOrPhone(identifier, identifier)
             .orElseThrow(() -> new AppException(ErrorCode.AUTH, "Invalid credentials"));
 
-        if (user.getStatus() != User.UserStatus.ACTIVE) {
+        if (user.getStatus() != UserStatus.ACTIVE) {
             throw new AppException(ErrorCode.FORBIDDEN, "User is not active");
         }
 

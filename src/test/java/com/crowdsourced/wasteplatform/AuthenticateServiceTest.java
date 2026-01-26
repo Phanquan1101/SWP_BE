@@ -6,6 +6,8 @@ import com.crowdsourced.wasteplatform.dto.auth.response.LoginResponse;
 import com.crowdsourced.wasteplatform.dto.auth.response.TokenResponse;
 import com.crowdsourced.wasteplatform.entity.Role;
 import com.crowdsourced.wasteplatform.entity.User;
+import com.crowdsourced.wasteplatform.entity.UserStatus;
+import com.crowdsourced.wasteplatform.entity.UserType;
 import com.crowdsourced.wasteplatform.entity.UserRole;
 import com.crowdsourced.wasteplatform.exception.AppException;
 import com.crowdsourced.wasteplatform.exception.ErrorCode;
@@ -66,7 +68,7 @@ class AuthenticateServiceTest {
         adminUser = seedUserWithRole(
             "admin@example.com",
             "Admin User",
-            User.UserType.ADMIN,
+            UserType.ADMIN,
             "ROLE_ADMIN"
         );
     }
@@ -131,7 +133,7 @@ class AuthenticateServiceTest {
         assertEquals(ErrorCode.AUTH, ex.getErrorCode());
     }
 
-    private User seedUserWithRole(String email, String fullName, User.UserType userType, String roleCode) {
+    private User seedUserWithRole(String email, String fullName, UserType userType, String roleCode) {
         Role role = Role.builder()
             .code(roleCode)
             .name(roleCode)
@@ -145,7 +147,7 @@ class AuthenticateServiceTest {
             .passwordHash(passwordEncoder.encode(PASSWORD))
             .fullName(fullName)
             .userType(userType)
-            .status(User.UserStatus.ACTIVE)
+            .status(UserStatus.ACTIVE)
             .suspendedReason(null)
             .enterpriseId(null)
             .areaId(null)
