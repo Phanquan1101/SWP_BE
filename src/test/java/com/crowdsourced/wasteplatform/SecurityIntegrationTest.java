@@ -118,8 +118,8 @@ class SecurityIntegrationTest {
             .userType(userType)
             .status(User.UserStatus.ACTIVE)
             .suspendedReason(null)
-            .enterpriseId(null)
-            .areaId(null)
+            .enterprise(null)
+            .area(null)
             .build();
         User savedUser = userRepository.save(user);
 
