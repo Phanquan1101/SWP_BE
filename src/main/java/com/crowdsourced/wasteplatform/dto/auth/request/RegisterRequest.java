@@ -14,7 +14,5 @@ public class RegisterRequest {
     private String phone;
     private String password;
     @NotNull
-    private UUID enterpriseId;
-    @NotNull
     private UUID areaId;
 }

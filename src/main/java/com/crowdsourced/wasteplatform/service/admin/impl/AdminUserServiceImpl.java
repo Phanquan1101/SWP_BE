@@ -65,9 +65,6 @@ public class AdminUserServiceImpl implements AdminUserService {
         Area area = areaRepository.findById(request.getAreaId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Area not found"));
 
-        Enterprise enterprise = enterpriseRepository.findById(request.getEnterpriseId())
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Enterprise not found"));
-
         User user = User.builder()
                 .email(request.getEmail())
                 .phone(request.getPhone())
@@ -76,7 +73,7 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .userType(User.UserType.CITIZEN)
                 .status(User.UserStatus.ACTIVE)
                 .area(area)
-                .enterprise(enterprise).build();
+                .enterprise(null).build();
 
         User savedUser = userRepository.save(user);
 
