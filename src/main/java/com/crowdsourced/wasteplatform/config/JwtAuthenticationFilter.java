@@ -23,6 +23,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    /**
+     * Filter đọc JWT từ header Authorization.
+     * - Xác thực token hợp lệ (access) bằng JwtService.
+     * - Ánh xạ roles thành GrantedAuthority để Spring Security RBAC.
+     * - Không truy DB, giảm độ trễ cho mọi request.
+     * Actor: tất cả role, chạy trước mỗi endpoint cần auth.
+     */
     private final JwtService jwtService;
 
     public JwtAuthenticationFilter(JwtService jwtService) {
@@ -33,6 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
+
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
