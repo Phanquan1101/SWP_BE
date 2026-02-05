@@ -18,6 +18,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
+    /**
+     * Service sinh và kiểm tra JWT cho toàn bộ hệ thống.
+     * Claims tối thiểu: uid (UUID user) + roles[] + typ (access/refresh).
+     * Không chứa enterpriseId vì mô hình single-enterprise.
+     * Actor: mọi role; được gọi bởi filter và AuthenticateService.
+     */
     private final String secret;
     private final long accessTokenExpiryMinutes;
     private final long refreshTokenExpiryDays;

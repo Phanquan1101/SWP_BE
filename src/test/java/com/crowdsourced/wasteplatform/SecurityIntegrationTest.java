@@ -5,6 +5,8 @@ import com.crowdsourced.wasteplatform.entity.User;
 import com.crowdsourced.wasteplatform.entity.UserStatus;
 import com.crowdsourced.wasteplatform.entity.UserType;
 import com.crowdsourced.wasteplatform.entity.UserRole;
+import com.crowdsourced.wasteplatform.dto.auth.request.RegisterRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.crowdsourced.wasteplatform.repository.RoleRepository;
 import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.repository.UserRoleRepository;
@@ -21,6 +23,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -49,6 +52,9 @@ class SecurityIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private User adminUser;
     private User citizenUser;
@@ -101,6 +107,14 @@ class SecurityIntegrationTest {
         String adminToken = jwtService.generateAccessToken(adminUser, List.of("ROLE_ADMIN"));
         mockMvc.perform(get("/admin/ping")
             .header("Authorization", "Bearer " + adminToken))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void registerIsPermitAll() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                .contentType("application/json")
+                .content("{\"email\":\"permitall@example.com\",\"password\":\"Password@123\",\"fullName\":\"Permit All\"}"))
             .andExpect(status().isOk());
     }
 

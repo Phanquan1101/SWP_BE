@@ -12,6 +12,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
+/**
+ * Cấu hình bảo mật trung tâm cho monolith.
+ * - Áp dụng JWT stateless, không dùng session.
+ * - Phân quyền RBAC: ADMIN quản trị, CITIZEN người dân, COLLECTOR nhân viên thu gom.
+ * - Mở tự do cho luồng auth/register và tài liệu Swagger.
+ * Actor liên quan: tất cả actor khi gọi REST API.
+ */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -32,7 +39,6 @@ public class SecurityConfig {
                 .permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/citizen/**").hasRole("CITIZEN")
-                .requestMatchers("/enterprise/**").hasRole("ENTERPRISE_MANAGER")
                 .requestMatchers("/collector/**").hasRole("COLLECTOR")
                 .anyRequest().authenticated()
             )
