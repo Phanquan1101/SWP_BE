@@ -2,10 +2,13 @@ package com.crowdsourced.wasteplatform;
 
 import com.crowdsourced.wasteplatform.dto.auth.request.LoginRequest;
 import com.crowdsourced.wasteplatform.dto.auth.request.RefreshTokenRequest;
+import com.crowdsourced.wasteplatform.dto.auth.request.RegisterRequest;
 import com.crowdsourced.wasteplatform.dto.auth.response.LoginResponse;
 import com.crowdsourced.wasteplatform.dto.auth.response.TokenResponse;
 import com.crowdsourced.wasteplatform.entity.Role;
 import com.crowdsourced.wasteplatform.entity.User;
+import com.crowdsourced.wasteplatform.entity.UserStatus;
+import com.crowdsourced.wasteplatform.entity.UserType;
 import com.crowdsourced.wasteplatform.entity.UserRole;
 import com.crowdsourced.wasteplatform.exception.AppException;
 import com.crowdsourced.wasteplatform.exception.ErrorCode;
@@ -66,9 +69,11 @@ class AuthenticateServiceTest {
         adminUser = seedUserWithRole(
             "admin@example.com",
             "Admin User",
-            User.UserType.ADMIN,
+            UserType.ADMIN,
             "ROLE_ADMIN"
         );
+
+        ensureRoleExists("ROLE_CITIZEN");
     }
 
     @Test
@@ -131,13 +136,26 @@ class AuthenticateServiceTest {
         assertEquals(ErrorCode.AUTH, ex.getErrorCode());
     }
 
-    private User seedUserWithRole(String email, String fullName, User.UserType userType, String roleCode) {
-        Role role = Role.builder()
-            .code(roleCode)
-            .name(roleCode)
-            .description(roleCode)
-            .build();
-        Role savedRole = roleRepository.save(role);
+    @Test
+    void registerCitizenSuccessThenLogin() {
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setEmail("newcitizen@example.com");
+        registerRequest.setPassword(PASSWORD);
+        registerRequest.setFullName("New Citizen");
+
+        LoginResponse registerResponse = authenticateService.register(registerRequest);
+        assertNotNull(registerResponse.getTokens().getAccessToken());
+        assertTrue(registerResponse.getUser().getRoles().contains("ROLE_CITIZEN"));
+
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setIdentifier("newcitizen@example.com");
+        loginRequest.setPassword(PASSWORD);
+        LoginResponse loginResponse = authenticateService.login(loginRequest);
+        assertEquals(registerResponse.getUser().getId(), loginResponse.getUser().getId());
+    }
+
+    private User seedUserWithRole(String email, String fullName, UserType userType, String roleCode) {
+        Role savedRole = ensureRoleExists(roleCode);
 
         User user = User.builder()
             .email(email)
@@ -145,7 +163,7 @@ class AuthenticateServiceTest {
             .passwordHash(passwordEncoder.encode(PASSWORD))
             .fullName(fullName)
             .userType(userType)
-            .status(User.UserStatus.ACTIVE)
+            .status(UserStatus.ACTIVE)
             .suspendedReason(null)
             .enterprise(null)
             .area(null)
@@ -159,6 +177,15 @@ class AuthenticateServiceTest {
         userRoleRepository.save(userRole);
 
         return savedUser;
+    }
+
+    private Role ensureRoleExists(String roleCode) {
+        return roleRepository.findByCode(roleCode)
+            .orElseGet(() -> roleRepository.save(Role.builder()
+                .code(roleCode)
+                .name(roleCode)
+                .description(roleCode)
+                .build()));
     }
 
     @SpringBootConfiguration

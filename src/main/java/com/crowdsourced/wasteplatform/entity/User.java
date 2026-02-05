@@ -87,16 +87,4 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    public enum UserType {
-        ADMIN,
-        CITIZEN,
-        ENTERPRISE_MANAGER,
-        COLLECTOR
-    }
-
-    public enum UserStatus {
-        ACTIVE,
-        INACTIVE,
-        SUSPENDED
-    }
 }

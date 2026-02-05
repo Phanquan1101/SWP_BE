@@ -2,7 +2,11 @@ package com.crowdsourced.wasteplatform;
 
 import com.crowdsourced.wasteplatform.entity.Role;
 import com.crowdsourced.wasteplatform.entity.User;
+import com.crowdsourced.wasteplatform.entity.UserStatus;
+import com.crowdsourced.wasteplatform.entity.UserType;
 import com.crowdsourced.wasteplatform.entity.UserRole;
+import com.crowdsourced.wasteplatform.dto.auth.request.RegisterRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.crowdsourced.wasteplatform.repository.RoleRepository;
 import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.repository.UserRoleRepository;
@@ -19,6 +23,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -48,6 +53,9 @@ class SecurityIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private User adminUser;
     private User citizenUser;
 
@@ -60,14 +68,14 @@ class SecurityIntegrationTest {
         adminUser = seedUserWithRole(
             "admin@example.com",
             "Admin User",
-            User.UserType.ADMIN,
+            UserType.ADMIN,
             "ROLE_ADMIN"
         );
 
         citizenUser = seedUserWithRole(
             "citizen@example.com",
             "Citizen User",
-            User.UserType.CITIZEN,
+            UserType.CITIZEN,
             "ROLE_CITIZEN"
         );
     }
@@ -102,7 +110,15 @@ class SecurityIntegrationTest {
             .andExpect(status().isOk());
     }
 
-    private User seedUserWithRole(String email, String fullName, User.UserType userType, String roleCode) {
+    @Test
+    void registerIsPermitAll() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                .contentType("application/json")
+                .content("{\"email\":\"permitall@example.com\",\"password\":\"Password@123\",\"fullName\":\"Permit All\"}"))
+            .andExpect(status().isOk());
+    }
+
+    private User seedUserWithRole(String email, String fullName, UserType userType, String roleCode) {
         Role role = roleRepository.findByCode(roleCode)
             .orElseGet(() -> roleRepository.save(Role.builder()
                 .code(roleCode)
@@ -116,7 +132,7 @@ class SecurityIntegrationTest {
             .passwordHash(passwordEncoder.encode(PASSWORD))
             .fullName(fullName)
             .userType(userType)
-            .status(User.UserStatus.ACTIVE)
+            .status(UserStatus.ACTIVE)
             .suspendedReason(null)
             .enterprise(null)
             .area(null)
