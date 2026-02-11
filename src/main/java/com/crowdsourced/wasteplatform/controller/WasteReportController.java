@@ -1,11 +1,9 @@
 package com.crowdsourced.wasteplatform.controller;
 
-import com.crowdsourced.wasteplatform.dto.waste_category.response.WasteCategoryResponse;
 import com.crowdsourced.wasteplatform.dto.waste_report.request.CreateWasteReportRequest;
 import com.crowdsourced.wasteplatform.dto.waste_report.response.WasteReportResponse;
 import com.crowdsourced.wasteplatform.exception.ApiResponse;
 import com.crowdsourced.wasteplatform.service.waste_report.WasteReportService;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
