@@ -13,7 +13,6 @@ import com.crowdsourced.wasteplatform.entity.ReportStatus;
 import com.crowdsourced.wasteplatform.entity.ReportStatusHistory;
 import com.crowdsourced.wasteplatform.entity.User;
 import com.crowdsourced.wasteplatform.entity.UserType;
-import com.crowdsourced.wasteplatform.entity.WasteCategory;
 import com.crowdsourced.wasteplatform.entity.WasteReport;
 import com.crowdsourced.wasteplatform.exception.AppException;
 import com.crowdsourced.wasteplatform.exception.ErrorCode;
@@ -52,7 +51,7 @@ public class WasteReportService {
 
         Area area = areaRepository.findById(areaId)
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Area not found"));
-        WasteCategory category = categoryRepository.findById(categoryId)
+        categoryRepository.findById(categoryId)
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Waste category not found"));
 
         WasteReport report = WasteReport.builder()
