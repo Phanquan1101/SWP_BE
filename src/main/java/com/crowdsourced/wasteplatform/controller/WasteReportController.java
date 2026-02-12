@@ -57,7 +57,7 @@ public class WasteReportController {
     @Operation(
             summary = "View an waste report"
     )
-    public ResponseEntity<ApiResponse<WasteReportResponse>> listByCitizenId(@AuthenticationPrincipal UUID citizenID, @PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<WasteReportResponse>> viewAnWasteReport (@AuthenticationPrincipal UUID citizenID, @PathVariable UUID id) {
         WasteReportResponse response = wasteReportService.getByCitizen(citizenID, id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
