@@ -6,5 +6,5 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReportMediaRepository extends JpaRepository<ReportMedia, UUID> {
-    List<ReportMedia> findByReportId(UUID reportId);
+    List<ReportMedia> findByReportIdOrderByCreatedAtAsc(UUID reportId);
 }

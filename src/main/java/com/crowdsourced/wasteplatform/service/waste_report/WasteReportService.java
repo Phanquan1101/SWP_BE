@@ -4,7 +4,7 @@ import com.crowdsourced.wasteplatform.dto.waste_report.request.AssignCollectorRe
 import com.crowdsourced.wasteplatform.dto.waste_report.request.CollectorStatusUpdateRequest;
 import com.crowdsourced.wasteplatform.dto.waste_report.request.CreateWasteReportRequest;
 import com.crowdsourced.wasteplatform.dto.waste_report.request.RejectReportRequest;
-import com.crowdsourced.wasteplatform.dto.waste_report.response.WasteReportResponse;
+import com.crowdsourced.wasteplatform.dto.report.response.WasteReportResponse;
 import com.crowdsourced.wasteplatform.entity.Area;
 import com.crowdsourced.wasteplatform.entity.CollectorStatus;
 import com.crowdsourced.wasteplatform.entity.ReportAssignment;

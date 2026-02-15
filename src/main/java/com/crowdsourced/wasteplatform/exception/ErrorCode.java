@@ -9,6 +9,11 @@ public enum ErrorCode {
     FORBIDDEN("FORBIDDEN", HttpStatus.FORBIDDEN, "Forbidden"),
     NOT_FOUND("NOT_FOUND", HttpStatus.NOT_FOUND, "Resource not found"),
     CONFLICT("CONFLICT", HttpStatus.CONFLICT, "Conflict"),
+    AREA_NOT_FOUND("AREA_NOT_FOUND", HttpStatus.NOT_FOUND, "Area not found"),
+    WASTE_CATEGORY_NOT_FOUND("WASTE_CATEGORY_NOT_FOUND", HttpStatus.NOT_FOUND, "Waste category not found"),
+    REPORT_NOT_FOUND("REPORT_NOT_FOUND", HttpStatus.NOT_FOUND, "Report not found"),
+    REPORT_ACCESS_DENIED("REPORT_ACCESS_DENIED", HttpStatus.FORBIDDEN, "Report access denied"),
+    INVALID_REPORT_STATUS("INVALID_REPORT_STATUS", HttpStatus.CONFLICT, "Invalid report status transition"),
     INTERNAL("INTERNAL", HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
 
     private final String code;
