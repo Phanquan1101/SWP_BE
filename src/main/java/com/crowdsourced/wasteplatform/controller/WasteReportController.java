@@ -1,6 +1,7 @@
 package com.crowdsourced.wasteplatform.controller;
 
 import com.crowdsourced.wasteplatform.dto.waste_report.request.CreateWasteReportRequest;
+import com.crowdsourced.wasteplatform.dto.waste_report.request.UpdateWasteReportRequest;
 import com.crowdsourced.wasteplatform.dto.waste_report.response.WasteReportResponse;
 import com.crowdsourced.wasteplatform.entity.WasteReport;
 import com.crowdsourced.wasteplatform.exception.ApiResponse;
@@ -59,6 +60,15 @@ public class WasteReportController {
     )
     public ResponseEntity<ApiResponse<WasteReportResponse>> viewAnWasteReport (@AuthenticationPrincipal UUID citizenID, @PathVariable UUID id) {
         WasteReportResponse response = wasteReportService.getByCitizen(citizenID, id);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PutMapping("/citizen/reports/{reportID}")
+    @Operation(
+            summary = "Update waste report while PENDING status"
+    )
+    public ResponseEntity<ApiResponse<WasteReportResponse>> updateWasteReport (@AuthenticationPrincipal UUID citizenID, @Valid @RequestBody UpdateWasteReportRequest updateWasteReportRequest, @PathVariable UUID reportID) {
+        WasteReportResponse response = wasteReportService.updateReportForCitizen(citizenID,updateWasteReportRequest,reportID);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

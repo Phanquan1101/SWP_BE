@@ -1,9 +1,6 @@
 package com.crowdsourced.wasteplatform.service.waste_report;
 
-import com.crowdsourced.wasteplatform.dto.waste_report.request.AssignCollectorRequest;
-import com.crowdsourced.wasteplatform.dto.waste_report.request.CollectorStatusUpdateRequest;
-import com.crowdsourced.wasteplatform.dto.waste_report.request.CreateWasteReportRequest;
-import com.crowdsourced.wasteplatform.dto.waste_report.request.RejectReportRequest;
+import com.crowdsourced.wasteplatform.dto.waste_report.request.*;
 import com.crowdsourced.wasteplatform.dto.waste_report.response.WasteReportResponse;
 import com.crowdsourced.wasteplatform.entity.Area;
 import com.crowdsourced.wasteplatform.entity.CollectorStatus;
@@ -28,6 +25,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.sql.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,6 +83,56 @@ public class WasteReportService {
             .changedBy(citizenId)
             .note("Citizen tạo báo cáo mới")
             .build());
+
+        return mapper.toResponse(saved);
+    }
+
+    @Transactional(readOnly = false)
+    public WasteReportResponse updateReportForCitizen(UUID citizenId, UpdateWasteReportRequest request, UUID reportId) {
+
+        UUID areaId = parseUuid(request.getAreaId(), "areaId");
+        UUID categoryId = parseUuid(request.getWasteCategoryId(), "wasteCategoryId");
+        areaRepository.findById(areaId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Area not found"));
+        categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Waste category not found"));
+
+        WasteReport saved = loadReport(reportId);
+
+        if(saved.getCurrentStatus().equals(ReportStatus.PENDING)) {
+            WasteReport report = saved.toBuilder()
+                    .citizenId(citizenId)
+                    .areaId(areaId)
+                    .wasteCategoryId(categoryId)
+                    .description(request.getDescription())
+                    .estimatedWeightKg(request.getEstimatedWeightKg())
+                    .latitude(request.getLatitude())
+                    .longitude(request.getLongitude())
+                    .addressText(request.getAddressText())
+                    .currentStatus(ReportStatus.PENDING)
+                    .build();
+            saved = reportRepository.save(report);
+
+            // Lưu media (ảnh hiện trường) nếu người dùng đính kèm
+            if (request.getMediaUrls() != null) {
+                for (String url : request.getMediaUrls()) {
+                    mediaRepository.save(ReportMedia.builder()
+                            .reportId(saved.getId())
+                            .mediaType(com.crowdsourced.wasteplatform.entity.MediaType.REPORT_IMAGE)
+                            .url(url)
+                            .build());
+                }
+            }
+
+            historyRepository.save(ReportStatusHistory.builder()
+                    .reportId(saved.getId())
+                    .fromStatus(ReportStatus.PENDING)
+                    .toStatus(ReportStatus.PENDING)
+                    .changedBy(citizenId)
+                    .note("Citizen sửa báo cáo")
+                    .build());
+        }
+
 
         return mapper.toResponse(saved);
     }

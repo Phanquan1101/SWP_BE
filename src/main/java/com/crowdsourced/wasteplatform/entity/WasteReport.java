@@ -28,7 +28,7 @@ import com.crowdsourced.wasteplatform.entity.ReportMedia;
 
 @Getter
 @Setter
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
