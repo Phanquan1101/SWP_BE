@@ -47,7 +47,7 @@ public class WasteReportService {
         UUID areaId = parseUuid(request.getAreaId(), "areaId");
         UUID categoryId = parseUuid(request.getWasteCategoryId(), "wasteCategoryId");
 
-        Area area = areaRepository.findById(areaId)
+        areaRepository.findById(areaId)
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Area not found"));
         categoryRepository.findById(categoryId)
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Waste category not found"));
