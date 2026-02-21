@@ -16,4 +16,6 @@ public interface ReportAssignmentRepository extends JpaRepository<ReportAssignme
         UUID collectorId, CollectorStatus status, Pageable pageable);
 
     Optional<ReportAssignment> findByIdAndCollectorId(UUID id, UUID collectorId);
+
+    boolean existsByReportId(UUID reportId);
 }

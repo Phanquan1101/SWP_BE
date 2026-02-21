@@ -35,10 +35,19 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/health/public")
+                .requestMatchers(
+                    "/auth/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**",
+                    "/health/public",
+                    "/areas",
+                    "/areas/tree"
+                )
                 .permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/citizen/**").hasRole("CITIZEN")
+                .requestMatchers("/enterprise/**").hasRole("ENTERPRISE_MANAGER")
                 .requestMatchers("/collector/**").hasRole("COLLECTOR")
                 .anyRequest().authenticated()
             )

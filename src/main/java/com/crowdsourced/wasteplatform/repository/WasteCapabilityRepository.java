@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface WasteCapabilityRepository extends JpaRepository<WasteCapability, UUID> {
 
     Optional<WasteCapability> findByWasteCategoryId(UUID wasteCategoryId);
+
+    boolean existsByWasteCategoryIdAndAcceptingTrue(UUID wasteCategoryId);
 }
