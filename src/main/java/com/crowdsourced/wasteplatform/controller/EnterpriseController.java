@@ -24,6 +24,9 @@ public class EnterpriseController {
     }
 
     @GetMapping("/enterprise/reports/inbox")
+    @Operation(
+            summary = "View list report by Area"
+    )
     public ResponseEntity<ApiResponse<List<WasteReportResponse>>> findWasteReportByArea(@AuthenticationPrincipal UUID manageID, @RequestParam@Valid UUID areaID) {
         return  ResponseEntity.ok(ApiResponse.success(wasteReportService.listByArea(manageID, areaID)));
     }
