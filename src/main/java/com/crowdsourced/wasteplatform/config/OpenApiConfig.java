@@ -29,6 +29,7 @@ public class OpenApiConfig {
                 new Tag().name("Auth"),
                 new Tag().name("Admin"),
                 new Tag().name("Citizen"),
+                new Tag().name("Enterprise"),
                 new Tag().name("Collector"),
                 new Tag().name("Reports"),
                 new Tag().name("Rewards"),

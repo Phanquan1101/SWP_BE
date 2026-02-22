@@ -146,6 +146,22 @@ public class WasteReportService {
     }
 
     @Transactional(readOnly = true)
+    public List<WasteReportResponse> listByArea(UUID manageID, UUID areaId) {
+        areaRepository.findById(areaId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Area not found"));
+
+        User manageUser = userRepository.findById(manageID).
+                orElseThrow(() ->  new AppException(ErrorCode.NOT_FOUND, "manageUser not found"));
+
+        if (!manageUser.getUserType().equals(UserType.ENTERPRISE_MANAGER)) {
+            throw new AppException(ErrorCode.FORBIDDEN, "User is not a manageUser");
+        }
+        return reportRepository.findByAreaId(areaId)
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+    @Transactional(readOnly = true)
     public WasteReportResponse getByCitizen(UUID citizenId, UUID reportId) {
         WasteReport report = reportRepository.findById(reportId)
             .filter(r -> citizenId.equals(r.getCitizenId()))

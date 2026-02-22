@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface WasteReportRepository extends JpaRepository<WasteReport, UUID> {
 
     List<WasteReport> findByCitizenIdOrderByCreatedAtDesc(UUID citizenId);
+    List<WasteReport> findByAreaId(UUID areaId);
 }
