@@ -17,6 +17,7 @@ import com.crowdsourced.wasteplatform.repository.ReportAssignmentRepository;
 import com.crowdsourced.wasteplatform.repository.ReportMediaRepository;
 import com.crowdsourced.wasteplatform.repository.ReportStatusHistoryRepository;
 import com.crowdsourced.wasteplatform.repository.WasteReportRepository;
+import com.crowdsourced.wasteplatform.service.reward.PointAwardService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class CollectorAssignmentService {
     private final WasteReportRepository reportRepository;
     private final ReportStatusHistoryRepository historyRepository;
     private final ReportMediaRepository mediaRepository;
+    private final PointAwardService pointAwardService;
 
     @Transactional(readOnly = true)
     public PageResponse<AssignmentResponse> getMyAssignments(String collectorIdStr, String statusOptional, Pageable pageable) {
@@ -78,6 +80,11 @@ public class CollectorAssignmentService {
                 .note(req.getNote())
                 .changedBy(parseUuid(collectorIdStr, "collectorId"))
                 .build());
+
+            // MVP rule: award points exactly when report becomes COLLECTED.
+            if (reportTo == ReportStatus.COLLECTED) {
+                pointAwardService.awardPointsForReport(report.getId().toString(), collectorIdStr);
+            }
         }
 
         return toResponse(assignment);

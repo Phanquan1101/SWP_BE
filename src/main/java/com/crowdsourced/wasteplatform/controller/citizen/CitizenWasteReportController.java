@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,7 +43,7 @@ public class CitizenWasteReportController {
 
     @GetMapping
     @Operation(summary = "Citizen xem danh sách báo cáo của mình")
-    public ApiResponse<PageResponse<WasteReportResponse>> list(Pageable pageable) {
+    public ApiResponse<PageResponse<WasteReportResponse>> list(@ParameterObject Pageable pageable) {
         String userId = currentUserId();
         return ApiResponse.success(service.getMyReports(userId, pageable));
     }

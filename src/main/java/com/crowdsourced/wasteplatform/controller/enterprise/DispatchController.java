@@ -9,6 +9,7 @@ import com.crowdsourced.wasteplatform.exception.ApiResponse;
 import com.crowdsourced.wasteplatform.service.enterprise.DispatchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +39,7 @@ public class DispatchController {
     public ApiResponse<PageResponse<InboxReportItemResponse>> getInbox(
         @RequestParam(value = "areaId", required = false) String areaId,
         @RequestParam(value = "status", required = false) String status,
-        Pageable pageable
+        @ParameterObject Pageable pageable
     ) {
         return ApiResponse.success(dispatchService.getInbox(areaId, status, pageable));
     }

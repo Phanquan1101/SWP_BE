@@ -42,7 +42,8 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/health/public",
                     "/areas",
-                    "/areas/tree"
+                    "/areas/tree",
+                    "/areas/*/leaderboard"
                 )
                 .permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
