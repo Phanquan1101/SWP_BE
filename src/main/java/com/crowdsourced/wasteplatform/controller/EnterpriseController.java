@@ -23,6 +23,14 @@ public class EnterpriseController {
         this.wasteReportService = wasteReportService;
     }
 
+    @GetMapping("/enterprise/reports")
+    @Operation(
+            summary = "View all list report"
+    )
+    public ResponseEntity<ApiResponse<List<WasteReportResponse>>> listWasteReport(@AuthenticationPrincipal UUID manageID){
+        return ResponseEntity.ok(ApiResponse.success(wasteReportService.listByManage(manageID)));
+    }
+
     @GetMapping("/enterprise/reports/inbox")
     @Operation(
             summary = "View list report by Area"
