@@ -182,7 +182,7 @@ public class AuthenticateService {
             .build();
     }
 
-    private UUID parseUuidNullable(String value) {
+    public UUID parseUuidNullable(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }

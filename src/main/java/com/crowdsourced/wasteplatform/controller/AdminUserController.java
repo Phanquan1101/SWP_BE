@@ -4,7 +4,8 @@ import com.crowdsourced.wasteplatform.dto.admin.request.UpsertUserRequest;
 import com.crowdsourced.wasteplatform.dto.admin.response.UserAdminResponse;
 import com.crowdsourced.wasteplatform.dto.auth.response.LoginResponse;
 import com.crowdsourced.wasteplatform.dto.auth.response.UserProfileResponse;
-import com.crowdsourced.wasteplatform.entity.User;
+import com.crowdsourced.wasteplatform.entity.UserStatus;
+import com.crowdsourced.wasteplatform.entity.UserType;
 import com.crowdsourced.wasteplatform.exception.ApiResponse;
 import com.crowdsourced.wasteplatform.exception.PageResponse;
 import com.crowdsourced.wasteplatform.service.admin.AdminUserService;
@@ -58,8 +59,8 @@ public class AdminUserController {
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<UserAdminResponse>>> getUsers(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) User.UserType userType,
-            @RequestParam(required = false) User.UserStatus status,
+            @RequestParam(required = false) UserType userType,
+            @RequestParam(required = false) UserStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {

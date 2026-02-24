@@ -1,6 +1,9 @@
 package com.crowdsourced.wasteplatform.repository;
 
 import com.crowdsourced.wasteplatform.entity.User;
+import com.crowdsourced.wasteplatform.entity.UserStatus;
+import com.crowdsourced.wasteplatform.entity.UserType;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,8 +43,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     """)
     Page<User> searchUsers(
             @Param("keyword") String keyword,
-            @Param("userType") User.UserType userType,
-            @Param("status") User.UserStatus status,
+            @Param("userType") UserType userType,
+            @Param("status") UserStatus status,
             Pageable pageable
     );
 

@@ -63,21 +63,21 @@ public class User {
     @Column(name = "suspended_reason", length = 255)
     private String suspendedReason;
 
-    //    @JdbcTypeCode(SqlTypes.CHAR)
-//    @Column(name = "enterprise_id", length = 36)
-//    private UUID enterpriseId;
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "enterprise_id")
-    private Enterprise enterprise;
+       @JdbcTypeCode(SqlTypes.CHAR)
+   @Column(name = "enterprise_id", length = 36)
+   private UUID enterpriseId;
+    // @JsonIgnore
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "enterprise_id")
+    // private Enterprise enterprise;
 
-    //    @JdbcTypeCode(SqlTypes.CHAR)
-//    @Column(name = "area_id", length = 36)
-//    private UUID areaId;
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "area_id")
-    private Area area;
+       @JdbcTypeCode(SqlTypes.CHAR)
+   @Column(name = "area_id", length = 36)
+   private UUID areaId;
+    // @JsonIgnore
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "area_id")
+    // private Area area;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

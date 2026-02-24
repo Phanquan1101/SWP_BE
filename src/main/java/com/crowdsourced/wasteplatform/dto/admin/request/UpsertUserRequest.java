@@ -1,6 +1,7 @@
 package com.crowdsourced.wasteplatform.dto.admin.request;
 
-import com.crowdsourced.wasteplatform.entity.User;
+import com.crowdsourced.wasteplatform.entity.UserStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,7 +23,7 @@ public class UpsertUserRequest {
 
     private String fullName;
 
-    private User.UserStatus status;
+    private UserStatus status;
 
     private String suspendedReason;
 

@@ -11,6 +11,8 @@ import com.crowdsourced.wasteplatform.entity.Enterprise;
 import com.crowdsourced.wasteplatform.entity.Role;
 import com.crowdsourced.wasteplatform.entity.User;
 import com.crowdsourced.wasteplatform.entity.UserRole;
+import com.crowdsourced.wasteplatform.entity.UserStatus;
+import com.crowdsourced.wasteplatform.entity.UserType;
 import com.crowdsourced.wasteplatform.exception.AppException;
 import com.crowdsourced.wasteplatform.exception.ErrorCode;
 import com.crowdsourced.wasteplatform.exception.PageResponse;
@@ -62,7 +64,7 @@ public class AdminUserServiceImpl implements AdminUserService {
             throw new AppException(ErrorCode.VALIDATION, "Phone already exists");
         }
 
-        Area area = areaRepository.findById(request.getAreaId())
+        Area area = areaRepository.findById(authenticateService.parseUuidNullable(request.getAreaId()))
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Area not found"));
 
         User user = User.builder()
@@ -70,10 +72,10 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .phone(request.getPhone())
                 .fullName(request.getFullName())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .userType(User.UserType.CITIZEN)
-                .status(User.UserStatus.ACTIVE)
-                .area(area)
-                .enterprise(null).build();
+                .userType(UserType.CITIZEN)
+                .status(UserStatus.ACTIVE)
+                .areaId(area.getId())
+                .enterpriseId(null).build();
 
         User savedUser = userRepository.save(user);
 
@@ -119,13 +121,13 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (request.getEnterpriseId() != null) {
             Enterprise enterprise = enterpriseRepository.findById(request.getEnterpriseId())
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Enterprise not found"));
-            user.setEnterprise(enterprise);
+            user.setEnterpriseId(enterprise.getId());
         }
 
         if (request.getAreaId() != null) {
             Area area = areaRepository.findById(request.getAreaId())
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Area not found"));
-            user.setArea(area);
+            user.setAreaId(area.getId());
         }
 
         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
@@ -165,8 +167,8 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     public PageResponse<UserAdminResponse> getUsers(
             String keyword,
-            User.UserType userType,
-            User.UserStatus status,
+            UserType userType,
+            UserStatus status,
             int page,
             int size
     ) {

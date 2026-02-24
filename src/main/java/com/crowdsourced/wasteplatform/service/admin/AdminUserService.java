@@ -6,6 +6,8 @@ import com.crowdsourced.wasteplatform.dto.auth.request.RegisterRequest;
 import com.crowdsourced.wasteplatform.dto.auth.response.LoginResponse;
 import com.crowdsourced.wasteplatform.dto.auth.response.UserProfileResponse;
 import com.crowdsourced.wasteplatform.entity.User;
+import com.crowdsourced.wasteplatform.entity.UserStatus;
+import com.crowdsourced.wasteplatform.entity.UserType;
 import com.crowdsourced.wasteplatform.exception.PageResponse;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +21,8 @@ public interface AdminUserService {
 
     PageResponse<UserAdminResponse> getUsers(
             String keyword,
-            User.UserType userType,
-            User.UserStatus status,
+            UserType userType,
+            UserStatus status,
             int page,
             int size
     );

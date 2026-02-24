@@ -2,7 +2,9 @@ package com.crowdsourced.wasteplatform.dto.admin.response;
 
 import com.crowdsourced.wasteplatform.entity.Area;
 import com.crowdsourced.wasteplatform.entity.Enterprise;
-import com.crowdsourced.wasteplatform.entity.User;
+import com.crowdsourced.wasteplatform.entity.UserStatus;
+import com.crowdsourced.wasteplatform.entity.UserType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,8 +24,8 @@ public class UserAdminResponse {
     private String email;
     private String phone;
     private String fullName;
-    private User.UserType userType;
-    private User.UserStatus status;
+    private UserType userType;
+    private UserStatus status;
     private String suspendedReason;
 
     private Enterprise enterprise;
