@@ -1,13 +1,19 @@
 package com.crowdsourced.wasteplatform.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
 import java.time.Instant;
 import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -57,13 +63,21 @@ public class User {
     @Column(name = "suspended_reason", length = 255)
     private String suspendedReason;
 
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "enterprise_id", length = 36)
-    private UUID enterpriseId;
+       @JdbcTypeCode(SqlTypes.CHAR)
+   @Column(name = "enterprise_id", length = 36)
+   private UUID enterpriseId;
+    // @JsonIgnore
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "enterprise_id")
+    // private Enterprise enterprise;
 
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "area_id", length = 36)
-    private UUID areaId;
+       @JdbcTypeCode(SqlTypes.CHAR)
+   @Column(name = "area_id", length = 36)
+   private UUID areaId;
+    // @JsonIgnore
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "area_id")
+    // private Area area;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

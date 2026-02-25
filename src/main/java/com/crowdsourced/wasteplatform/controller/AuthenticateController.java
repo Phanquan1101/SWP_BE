@@ -7,6 +7,7 @@ import com.crowdsourced.wasteplatform.dto.auth.request.RegisterRequest;
 import com.crowdsourced.wasteplatform.dto.auth.response.LoginResponse;
 import com.crowdsourced.wasteplatform.dto.auth.response.TokenResponse;
 import com.crowdsourced.wasteplatform.exception.ApiResponse;
+import com.crowdsourced.wasteplatform.service.admin.AdminUserService;
 import com.crowdsourced.wasteplatform.service.auth.AuthenticateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,13 +33,11 @@ import org.springframework.web.bind.annotation.RestController;
  * - /auth/logout: Revoke refresh token.
  * Actor: Citizen là chính, Admin/COLLECTOR dùng login/refresh/logout.
  */
+@RequiredArgsConstructor
 public class AuthenticateController {
 
     private final AuthenticateService authenticateService;
-
-    public AuthenticateController(AuthenticateService authenticateService) {
-        this.authenticateService = authenticateService;
-    }
+    private final AdminUserService adminUserService;
 
     @Operation(summary = "Login")
     @ApiResponses(value = {
@@ -87,4 +87,17 @@ public class AuthenticateController {
         authenticateService.logout(request.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+
+//    @Operation(summary = "Register")
+//    @ApiResponses(value = {
+//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Login success",
+//                    content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden", content = @Content)
+//    })
+//
+//    @PostMapping("/register")
+//    public ResponseEntity<ApiResponse<LoginResponse>> register(@Valid @RequestBody RegisterRequest registerRequest) {
+//        return ResponseEntity.ok(ApiResponse.success(adminUserService.register(registerRequest)));
+//    }
 }
