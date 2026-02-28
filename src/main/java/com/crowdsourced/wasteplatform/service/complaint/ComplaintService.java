@@ -10,7 +10,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.crowdsourced.utils.SecurityUtil;
 import com.crowdsourced.wasteplatform.dto.complaint.request.ComplaintNotification;
 import com.crowdsourced.wasteplatform.dto.complaint.request.CreateComplaintRequest;
 import com.crowdsourced.wasteplatform.dto.complaint.request.ResolveComplaintRequest;
@@ -31,6 +30,7 @@ import com.crowdsourced.wasteplatform.repository.NotificationRepository;
 import com.crowdsourced.wasteplatform.repository.UserNotificationRepository;
 import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.service.email.EmailService;
+import com.crowdsourced.wasteplatform.utils.SecurityUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -94,7 +94,7 @@ public class ComplaintService {
             Complaint saved = complaintRepository.save(complaint);
 
             Notification notification = Notification.builder()
-            .eventType(null)
+            .eventType("COMPLAINT")
             .reportId(null)
             .report(null)
             .complaintId(saved.getId())
@@ -107,8 +107,8 @@ public class ComplaintService {
             UserNotification userNotification = UserNotification.builder()
             .notification(notificationSaved)
             .notificationId(notificationSaved.getId())
-            .user(user)
-            .userId(user.getId())
+            .user(complaint.getComplainant())
+            .userId(complaint.getComplainant().getId())
             .read(false)
             .deliveryChannel(NotificationChannel.IN_APP)
             .build();

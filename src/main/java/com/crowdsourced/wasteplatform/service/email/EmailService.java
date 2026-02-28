@@ -16,16 +16,22 @@ public class EmailService {
                                            String complaintTitle,
                                            String resolutionNote) {
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("Your Complaint Has Been Resolved");
-        message.setText(
-                "Hello,\n\n" +
-                "Your complaint titled: " + complaintTitle + " has been resolved.\n\n" +
-                "Resolution note:\n" + resolutionNote + "\n\n" +
-                "Thank you for using our platform."
-        );
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(toEmail);
+            message.setSubject("Your Complaint Has Been Resolved");
+            message.setText(
+                    "Hello,\n\n" +
+                    "Your complaint titled: " + complaintTitle + " has been resolved.\n\n" +
+                    "Resolution note:\n" + resolutionNote + "\n\n" +
+                    "Thank you for using our platform."
+            );
 
-        mailSender.send(message);
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 }

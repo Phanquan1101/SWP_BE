@@ -1,7 +1,8 @@
-package com.crowdsourced.utils;
+package com.crowdsourced.wasteplatform.utils;
 
 import java.security.Principal;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,9 @@ public class SecurityUtil {
     private final UserRepository userRepository;
 
     public User getLoginUser(Principal principal){
-        String email = principal.getName();
-        Optional<User> customerOptional = userRepository.findByEmail(email);
+        String id = principal.getName();
+        UUID userId = UUID.fromString(id);
+        Optional<User> customerOptional = userRepository.findById(userId);
         if(customerOptional.isPresent()){
             return customerOptional.get();
         }else {

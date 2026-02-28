@@ -19,6 +19,18 @@ spring:
   flyway:
     enabled: true
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: damanhbangthpt@gmail.com
+    password: mipa kchg ncld dkje
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 app:
   jwt:
     secret: 2F0yq9N6mB4pZ1rX3nT8sU5vW6yA7bC8dE9fG0hI1jK2lM3nO4pQ5rS6tU7vW8x
