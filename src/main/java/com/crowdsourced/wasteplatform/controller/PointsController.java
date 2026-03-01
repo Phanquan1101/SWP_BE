@@ -7,6 +7,7 @@ import com.crowdsourced.wasteplatform.service.reward.PointsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,7 +28,7 @@ public class PointsController {
 
     @GetMapping("/citizen/points/transactions")
     @Operation(summary = "Get point transaction history for current citizen")
-    public ApiResponse<PageResponse<PointTransactionResponse>> getMyTransactions(Pageable pageable) {
+    public ApiResponse<PageResponse<PointTransactionResponse>> getMyTransactions(@ParameterObject Pageable pageable) {
         return ApiResponse.success(pointsService.getCitizenTransactions(currentUserId(), pageable));
     }
 
