@@ -13,19 +13,14 @@ public class EmailService {
     private final JavaMailSender mailSender;
 
     public void sendComplaintResolvedEmail(String toEmail,
-                                           String complaintTitle,
-                                           String resolutionNote) {
+                                           String subject,
+                                           String text) {
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(toEmail);
-            message.setSubject("Your Complaint Has Been Resolved");
-            message.setText(
-                    "Hello,\n\n" +
-                    "Your complaint titled: " + complaintTitle + " has been resolved.\n\n" +
-                    "Resolution note:\n" + resolutionNote + "\n\n" +
-                    "Thank you for using our platform."
-            );
+            message.setSubject(subject);
+            message.setText(text);
 
             mailSender.send(message);
 

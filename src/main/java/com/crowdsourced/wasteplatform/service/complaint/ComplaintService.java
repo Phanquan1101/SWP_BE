@@ -94,13 +94,13 @@ public class ComplaintService {
             Complaint saved = complaintRepository.save(complaint);
 
             Notification notification = Notification.builder()
-            .eventType("COMPLAINT")
+            .eventType("COMPLAINT_RESOLVED")
             .reportId(null)
             .report(null)
             .complaintId(saved.getId())
             .complaint(saved)
-            .title("Title")
-            .body("Content")
+            .title("Your Complaint Has Been Resolved")
+            .body("Your complaint has been reviewed and successfully resolved by the administration.")
             .build();
             Notification notificationSaved = notificationRepository.save(notification);
 
@@ -114,10 +114,53 @@ public class ComplaintService {
             .build();
             userNotificationRepository.save(userNotification);
 
+            String subject;
+            String content;
+            switch (status) {
+        case RESOLVED:
+            subject = "Your Complaint Has Been Resolved";
+            content = "Your complaint has been successfully resolved.";
+            break;
+
+        case REJECTED:
+            subject = "Your Complaint Has Been Reviewed";
+            content = "After review, your complaint has been rejected.";
+            break;
+
+        case IN_REVIEW:
+            subject = "Your Complaint Is Under Review";
+            content = "Your complaint is currently being reviewed by our administration team.";
+            break;
+
+        default:
+            subject = "Complaint Status Update";
+            content = "Your complaint status has been updated.";
+    }
+
+    String emailContent =
+        "Dear User,\n\n" +
+
+        "We would like to inform you that there has been an update regarding your submitted complaint.\n\n" +
+
+        content + "\n\n" +
+
+        "Resolution Details:\n" +
+        request.getResolutionNote() + "\n\n" +
+
+        "If you require further clarification or believe additional action is needed, " +
+        "please feel free to contact our support team through the platform.\n\n" +
+
+        "We sincerely appreciate your effort in helping us maintain environmental quality " +
+        "and improve our waste management services.\n\n" +
+
+        "Best regards,\n" +
+        "Waste Management Support Team\n" +
+        "Crowdsourced Waste Platform";
+
             emailService.sendComplaintResolvedEmail(
             complaint.getComplainant().getEmail(),
-            "",
-            request.getResolutionNote()
+            subject,
+            emailContent
         );
 
         return complaintMapper.toResponse(saved);
