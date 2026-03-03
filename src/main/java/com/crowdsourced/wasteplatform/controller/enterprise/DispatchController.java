@@ -46,6 +46,12 @@ public class DispatchController {
         return ApiResponse.success(dispatchService.getInbox(areaId, status, pageable));
     }
 
+    @GetMapping
+    @Operation(summary = "Get all reports for enterprise manager")
+    public ApiResponse<PageResponse<InboxReportItemResponse>> getAllReports(@ParameterObject Pageable pageable) {
+        return ApiResponse.success(dispatchService.getAllReports(pageable));
+    }
+
     @PostMapping("/{id}/accept")
     @Operation(summary = "Accept report for dispatch")
     public ApiResponse<WasteReportResponse> accept(@PathVariable String id) {

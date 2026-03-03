@@ -57,6 +57,13 @@ public class DispatchService {
         return PageResponse.from(mapped);
     }
 
+    @Transactional(readOnly = true)
+    public PageResponse<InboxReportItemResponse> getAllReports(Pageable pageable) {
+        Page<InboxReportItemResponse> mapped = reportRepository.findAll(pageable)
+            .map(dispatchMapper::toInboxItem);
+        return PageResponse.from(mapped);
+    }
+
     @Transactional
     public WasteReportResponse acceptReport(String reportId, String managerId) {
         UUID managerUuid = parseUuid(managerId, "managerId");
