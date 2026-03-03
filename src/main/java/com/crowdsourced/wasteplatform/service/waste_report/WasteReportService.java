@@ -27,7 +27,6 @@ import com.crowdsourced.wasteplatform.repository.WasteCategoryRepository;
 import com.crowdsourced.wasteplatform.repository.WasteReportRepository;
 import com.crowdsourced.wasteplatform.service.email.EmailService;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -57,9 +56,7 @@ public class WasteReportService {
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Area not found"));
         WasteCategory category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Waste category not found"));
-        User user = userRepository.findById(citizenId)
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "User not found"));
-
+            
         WasteReport report = WasteReport.builder()
             .citizenId(citizenId)
             .areaId(areaId)
@@ -91,33 +88,6 @@ public class WasteReportService {
             .changedBy(citizenId)
             .note("Citizen tạo báo cáo mới")
             .build());
-
-            String subject = "Waste Report Submitted Successfully";
-
-            String content =
-                "Dear User,\n\n" +
-
-                "Thank you for submitting your waste report to our platform.\n\n" +
-
-                "We have successfully received your report and it is currently being reviewed by our administration team. " +
-                "You will be notified once there is an update regarding its processing status.\n\n" +
-
-                "Report Details:\n" +
-                "- Description: " + request.getDescription() + "\n" +
-                "- Location: " + request.getAddressText() + "\n" +
-                "- Estimated Weight (kg): " + request.getEstimatedWeightKg() + "\n\n" +
-
-                "We truly appreciate your contribution in helping us maintain a cleaner and healthier environment.\n\n" +
-
-                "Best regards,\n" +
-                "Waste Management Support Team\n" +
-                "Crowdsourced Waste Platform";
-
-            emailService.sendComplaintResolvedEmail(
-            user.getEmail(),
-            subject,
-            content
-        );
 
         return mapper.toResponse(saved);
     }
