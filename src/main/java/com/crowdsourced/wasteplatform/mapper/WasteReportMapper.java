@@ -1,24 +1,27 @@
 package com.crowdsourced.wasteplatform.mapper;
 
-import com.crowdsourced.wasteplatform.dto.waste_report.response.WasteReportResponse;
-import com.crowdsourced.wasteplatform.entity.ReportMedia;
+import com.crowdsourced.wasteplatform.dto.report.response.ReportMediaResponse;
+import com.crowdsourced.wasteplatform.dto.report.response.ReportStatusHistoryResponse;
+import com.crowdsourced.wasteplatform.dto.report.response.WasteReportResponse;
 import com.crowdsourced.wasteplatform.entity.WasteReport;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {
+    ReportMediaMapper.class,
+    ReportStatusHistoryMapper.class
+})
 public interface WasteReportMapper {
 
-    @Mapping(target = "areaName", expression = "java(report.getArea()!=null?report.getArea().getName():null)")
-    @Mapping(target = "wasteCategoryName", expression = "java(report.getWasteCategory()!=null?report.getWasteCategory().getName():null)")
-    @Mapping(target = "status", source = "currentStatus")
-    @Mapping(target = "mediaUrls", expression = "java(mapMedia(report.getMediaList()))")
-    WasteReportResponse toResponse(WasteReport report);
+    @Mapping(target = "media", source = "mediaList")
+    @Mapping(target = "statusHistory", source = "statusHistory")
+    WasteReportResponse toResponse(WasteReport report,
+                                   List<ReportMediaResponse> mediaList,
+                                   List<ReportStatusHistoryResponse> statusHistory);
 
-    default List<String> mapMedia(List<ReportMedia> mediaList) {
-        if (mediaList == null) return List.of();
-        return mediaList.stream().map(ReportMedia::getUrl).collect(Collectors.toList());
+    default WasteReportResponse toResponse(WasteReport report) {
+        return toResponse(report, List.of(), List.of());
     }
 }

@@ -170,3 +170,10 @@ Hoặc chạy trực tiếp từ IntelliJ (Main class: `com.crowdsourced.wastepl
 
 ---
 Đã cập nhật README.md với đầy đủ hướng dẫn triển khai & nghiệp vụ hiện có/planned.  
+
+## MVP Scope Update (TP.HCM only)
+- Scope MVP cho area chi su dung TP.HCM (khong mo rong tinh/thanh khac).
+- FE dung GET /areas/tree de render dropdown 3 cap: TP.HCM -> Quan/Huyen -> Phuong/Xa.
+- Waste report flow hien tai khong doi, van dung area_id + latitude/longitude + address_text.
+- Seed tree TP.HCM nam trong migration V9__seed_hcm_area_tree.sql voi UUID co dinh.
+

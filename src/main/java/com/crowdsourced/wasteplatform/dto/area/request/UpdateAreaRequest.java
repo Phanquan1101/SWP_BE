@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 public class UpdateAreaRequest {
 
-    private String parentId; // optional UUID string
+    private String parentId;
 
     @NotBlank
     private String name;

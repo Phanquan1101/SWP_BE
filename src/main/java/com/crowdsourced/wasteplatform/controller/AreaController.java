@@ -1,5 +1,6 @@
 package com.crowdsourced.wasteplatform.controller;
 
+import com.crowdsourced.wasteplatform.dto.area.response.AreaTreeNodeResponse;
 import com.crowdsourced.wasteplatform.exception.ApiResponse;
 import com.crowdsourced.wasteplatform.dto.area.request.CreateAreaRequest;
 import com.crowdsourced.wasteplatform.dto.area.request.UpdateAreaRequest;
@@ -36,9 +37,8 @@ public class AreaController {
 
     @Operation(summary = "List active areas")
     @GetMapping("/areas")
-    public ResponseEntity<ApiResponse<List<AreaResponse>>> getAreas() {
-        List<AreaResponse> data = areaService.getAllActive();
-        return ResponseEntity.ok(ApiResponse.success(data));
+    public ResponseEntity<ApiResponse<AreaTreeNodeResponse>> getAreas() {
+        return ResponseEntity.ok(ApiResponse.success(areaService.getHcmAreaTree()));
     }
 
     @Operation(summary = "Create area")
