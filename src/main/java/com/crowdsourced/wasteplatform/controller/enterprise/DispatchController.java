@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
+
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -36,12 +38,8 @@ public class DispatchController {
 
     @GetMapping("/inbox")
     @Operation(summary = "Get pending/filtered reports in dispatch inbox")
-    public ApiResponse<PageResponse<InboxReportItemResponse>> getInbox(
-        @RequestParam(value = "areaId", required = false) String areaId,
-        @RequestParam(value = "status", required = false) String status,
-        @ParameterObject Pageable pageable
-    ) {
-        return ApiResponse.success(dispatchService.getInbox(areaId, status, pageable));
+    public ApiResponse<List<WasteReportResponse>> getInbox() {
+        return ApiResponse.success(dispatchService.getInbox());
     }
 
     @PostMapping("/{id}/accept")
