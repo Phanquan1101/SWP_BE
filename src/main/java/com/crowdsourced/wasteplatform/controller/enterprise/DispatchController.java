@@ -38,8 +38,12 @@ public class DispatchController {
 
     @GetMapping("/inbox")
     @Operation(summary = "Get pending/filtered reports in dispatch inbox")
-    public ApiResponse<List<WasteReportResponse>> getInbox() {
-        return ApiResponse.success(dispatchService.getInbox());
+    public ApiResponse<PageResponse<InboxReportItemResponse>> getInbox(
+            @RequestParam(value = "areaId", required = false) String areaId,
+            @RequestParam(value = "status", required = false) String status,
+            @ParameterObject Pageable pageable
+    ) {
+        return ApiResponse.success(dispatchService.getInbox(areaId, status, pageable));
     }
 
     @PostMapping("/{id}/accept")

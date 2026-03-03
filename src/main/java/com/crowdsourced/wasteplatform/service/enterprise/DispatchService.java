@@ -49,11 +49,12 @@ public class DispatchService {
     private final WasteReportMapper reportMapper;
 
     @Transactional(readOnly = true)
-    public List<WasteReportResponse> getInbox() {
-        return reportRepository.findAll()
-                .stream()
-                .map(reportMapper::toResponse)
-                .toList();
+    public PageResponse<InboxReportItemResponse> getInbox(String areaIdOptional, String statusOptional, Pageable pageable) {
+        UUID areaId = parseUuidNullable(areaIdOptional, "areaId");
+        ReportStatus status = parseStatusOrDefault(statusOptional, ReportStatus.PENDING);
+        Page<WasteReport> page = reportRepository.findInbox(areaId, status, pageable);
+        Page<InboxReportItemResponse> mapped = page.map(dispatchMapper::toInboxItem);
+        return PageResponse.from(mapped);
     }
 
     @Transactional
