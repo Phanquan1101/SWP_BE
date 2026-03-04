@@ -1,9 +1,12 @@
 package com.crowdsourced.wasteplatform.service.collector;
 
-import com.crowdsourced.wasteplatform.dto.common.PageResponse;
 import com.crowdsourced.wasteplatform.dto.collector.request.UpdateCollectorStatusRequest;
 import com.crowdsourced.wasteplatform.dto.collector.request.UploadProofRequest;
 import com.crowdsourced.wasteplatform.dto.collector.response.AssignmentResponse;
+import com.crowdsourced.wasteplatform.dto.common.PageResponse;
+import com.crowdsourced.wasteplatform.dto.report.response.ReportMediaResponse;
+import com.crowdsourced.wasteplatform.dto.report.response.ReportStatusHistoryResponse;
+import com.crowdsourced.wasteplatform.dto.report.response.WasteReportResponse;
 import com.crowdsourced.wasteplatform.entity.CollectorStatus;
 import com.crowdsourced.wasteplatform.entity.MediaType;
 import com.crowdsourced.wasteplatform.entity.ReportAssignment;
@@ -13,6 +16,9 @@ import com.crowdsourced.wasteplatform.entity.ReportStatusHistory;
 import com.crowdsourced.wasteplatform.entity.WasteReport;
 import com.crowdsourced.wasteplatform.exception.AppException;
 import com.crowdsourced.wasteplatform.exception.ErrorCode;
+import com.crowdsourced.wasteplatform.mapper.ReportMediaMapper;
+import com.crowdsourced.wasteplatform.mapper.ReportStatusHistoryMapper;
+import com.crowdsourced.wasteplatform.mapper.WasteReportMapper;
 import com.crowdsourced.wasteplatform.repository.ReportAssignmentRepository;
 import com.crowdsourced.wasteplatform.repository.ReportMediaRepository;
 import com.crowdsourced.wasteplatform.repository.ReportStatusHistoryRepository;
@@ -35,6 +41,9 @@ public class CollectorAssignmentService {
     private final ReportStatusHistoryRepository historyRepository;
     private final ReportMediaRepository mediaRepository;
     private final PointAwardService pointAwardService;
+    private final ReportMediaMapper mediaMapper;
+    private final ReportStatusHistoryMapper historyMapper;
+    private final WasteReportMapper reportMapper;
 
     @Transactional(readOnly = true)
     public PageResponse<AssignmentResponse> getMyAssignments(String collectorIdStr, String statusOptional, Pageable pageable) {
@@ -46,8 +55,16 @@ public class CollectorAssignmentService {
         } else {
             page = assignmentRepository.findAllByCollectorIdOrderByAssignedAtDesc(collectorId, pageable);
         }
-        Page<AssignmentResponse> mapped = page.map(this::toResponse);
-        return PageResponse.from(mapped);
+        return PageResponse.from(page.map(this::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public WasteReportResponse getOwnedReportDetail(String reportIdStr, String collectorIdStr) {
+        UUID reportId = parseUuid(reportIdStr, "reportId");
+        UUID collectorId = parseUuid(collectorIdStr, "collectorId");
+        assignmentRepository.findByReportIdAndCollectorId(reportId, collectorId)
+            .orElseThrow(() -> new AppException(ErrorCode.REPORT_ACCESS_DENIED, "Report not assigned to collector"));
+        return enrichReport(loadReport(reportId));
     }
 
     @Transactional
@@ -69,8 +86,8 @@ public class CollectorAssignmentService {
 
         WasteReport report = loadReport(assignment.getReportId());
         ReportStatus reportFrom = report.getCurrentStatus();
-        ReportStatus reportTo = mapCollectorToReportStatus(to, reportFrom);
-        if (reportTo != null && reportTo != reportFrom) {
+        ReportStatus reportTo = mapCollectorToReportStatus(to);
+        if (reportTo != reportFrom) {
             report.setCurrentStatus(reportTo);
             reportRepository.save(report);
             historyRepository.save(ReportStatusHistory.builder()
@@ -81,7 +98,6 @@ public class CollectorAssignmentService {
                 .changedBy(parseUuid(collectorIdStr, "collectorId"))
                 .build());
 
-            // MVP rule: award points exactly when report becomes COLLECTED.
             if (reportTo == ReportStatus.COLLECTED) {
                 pointAwardService.awardPointsForReport(report.getId().toString(), collectorIdStr);
             }
@@ -94,7 +110,7 @@ public class CollectorAssignmentService {
     public AssignmentResponse uploadProof(String assignmentIdStr, String collectorIdStr, UploadProofRequest req) {
         ReportAssignment assignment = loadOwnedAssignment(assignmentIdStr, collectorIdStr);
         if (assignment.getCollectorStatus() != CollectorStatus.COLLECTED) {
-            throw new AppException(ErrorCode.INVALID_REPORT_STATUS, "Chỉ upload proof khi trạng thái COLLECTED");
+            throw new AppException(ErrorCode.INVALID_REPORT_STATUS, "Only COLLECTED assignment can upload proof");
         }
         UUID collectorId = parseUuid(collectorIdStr, "collectorId");
         for (String url : req.getProofUrls()) {
@@ -125,22 +141,34 @@ public class CollectorAssignmentService {
             .build();
     }
 
-    private void validateTransition(CollectorStatus from, CollectorStatus to) {
-        if (from == CollectorStatus.ASSIGNED) {
-            if (to == CollectorStatus.ON_THE_WAY || to == CollectorStatus.COLLECTED || to == CollectorStatus.FAILED) return;
-        }
-        if (from == CollectorStatus.ON_THE_WAY) {
-            if (to == CollectorStatus.COLLECTED || to == CollectorStatus.FAILED) return;
-        }
-        throw new AppException(ErrorCode.INVALID_REPORT_STATUS, "Không hợp lệ chuyển trạng thái từ " + from + " sang " + to);
+    private WasteReportResponse enrichReport(WasteReport report) {
+        List<ReportMediaResponse> media = mediaRepository.findByReportIdOrderByCreatedAtAsc(report.getId())
+            .stream()
+            .map(mediaMapper::toResponse)
+            .toList();
+        List<ReportStatusHistoryResponse> history = historyRepository.findByReportIdOrderByCreatedAtAsc(report.getId())
+            .stream()
+            .map(historyMapper::toResponse)
+            .toList();
+        return reportMapper.toResponse(report, media, history);
     }
 
-    private ReportStatus mapCollectorToReportStatus(CollectorStatus collectorStatus, ReportStatus current) {
+    private void validateTransition(CollectorStatus from, CollectorStatus to) {
+        if (from == CollectorStatus.ASSIGNED && (to == CollectorStatus.ON_THE_WAY || to == CollectorStatus.COLLECTED || to == CollectorStatus.FAILED)) {
+            return;
+        }
+        if (from == CollectorStatus.ON_THE_WAY && (to == CollectorStatus.COLLECTED || to == CollectorStatus.FAILED)) {
+            return;
+        }
+        throw new AppException(ErrorCode.INVALID_REPORT_STATUS, "Invalid collector status transition from " + from + " to " + to);
+    }
+
+    private ReportStatus mapCollectorToReportStatus(CollectorStatus collectorStatus) {
         return switch (collectorStatus) {
             case ASSIGNED -> ReportStatus.ASSIGNED;
             case ON_THE_WAY -> ReportStatus.ON_THE_WAY;
             case COLLECTED -> ReportStatus.COLLECTED;
-            case FAILED -> ReportStatus.ACCEPTED; // quay lại trạng thái chờ reassignment
+            case FAILED -> ReportStatus.ACCEPTED;
         };
     }
 

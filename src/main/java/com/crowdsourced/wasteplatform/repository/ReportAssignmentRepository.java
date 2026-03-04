@@ -17,5 +17,7 @@ public interface ReportAssignmentRepository extends JpaRepository<ReportAssignme
 
     Optional<ReportAssignment> findByIdAndCollectorId(UUID id, UUID collectorId);
 
+    Optional<ReportAssignment> findByReportIdAndCollectorId(UUID reportId, UUID collectorId);
+
     boolean existsByReportId(UUID reportId);
 }

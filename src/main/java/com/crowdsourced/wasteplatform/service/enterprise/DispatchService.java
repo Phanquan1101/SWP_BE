@@ -64,6 +64,12 @@ public class DispatchService {
         return PageResponse.from(mapped);
     }
 
+    @Transactional(readOnly = true)
+    public WasteReportResponse getReportDetail(String reportId) {
+        WasteReport report = loadReport(reportId);
+        return enrichReport(report);
+    }
+
     @Transactional
     public WasteReportResponse acceptReport(String reportId, String managerId) {
         UUID managerUuid = parseUuid(managerId, "managerId");

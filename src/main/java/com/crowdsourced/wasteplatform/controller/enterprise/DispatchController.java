@@ -52,6 +52,12 @@ public class DispatchController {
         return ApiResponse.success(dispatchService.getAllReports(pageable));
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Get report detail for enterprise manager")
+    public ApiResponse<WasteReportResponse> getReportDetail(@PathVariable String id) {
+        return ApiResponse.success(dispatchService.getReportDetail(id));
+    }
+
     @PostMapping("/{id}/accept")
     @Operation(summary = "Accept report for dispatch")
     public ApiResponse<WasteReportResponse> accept(@PathVariable String id) {

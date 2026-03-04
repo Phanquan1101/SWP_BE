@@ -4,6 +4,7 @@ import com.crowdsourced.wasteplatform.dto.collector.request.UpdateCollectorStatu
 import com.crowdsourced.wasteplatform.dto.collector.request.UploadProofRequest;
 import com.crowdsourced.wasteplatform.dto.collector.response.AssignmentResponse;
 import com.crowdsourced.wasteplatform.dto.common.PageResponse;
+import com.crowdsourced.wasteplatform.dto.report.response.WasteReportResponse;
 import com.crowdsourced.wasteplatform.exception.ApiResponse;
 import com.crowdsourced.wasteplatform.service.collector.CollectorAssignmentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,12 @@ public class CollectorAssignmentController {
         @ParameterObject Pageable pageable
     ) {
         return ApiResponse.success(service.getMyAssignments(currentUserId(), status, pageable));
+    }
+
+    @GetMapping("/report/{reportId}")
+    @Operation(summary = "Collector gets report detail of owned assignment")
+    public ApiResponse<WasteReportResponse> getReportDetail(@PathVariable String reportId) {
+        return ApiResponse.success(service.getOwnedReportDetail(reportId, currentUserId()));
     }
 
     @PatchMapping("/{id}/status")
