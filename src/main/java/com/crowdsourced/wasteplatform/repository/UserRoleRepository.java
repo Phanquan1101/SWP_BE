@@ -6,11 +6,28 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface UserRoleRepository extends JpaRepository<UserRole, UUID> {
 
     @Query("select ur from UserRole ur join fetch ur.role where ur.userId = :userId")
     List<UserRole> findByUserIdWithRole(@Param("userId") UUID userId);
+
+    @Query("select ur from UserRole ur join fetch ur.role where ur.userId = :userId")
+    List<UserRole> findAllByUserId(@Param("userId") UUID userId);
+
+    @Query("""
+        select r.code from UserRole ur
+        join ur.role r
+        where ur.userId = :userId
+        order by r.code
+        """)
+    List<String> findRoleCodesByUserId(@Param("userId") UUID userId);
+
+    boolean existsByUserIdAndRoleId(UUID userId, UUID roleId);
+
+    @Transactional
+    long deleteByUserIdAndRoleId(UUID userId, UUID roleId);
 
     @Query("""
         select case when count(ur) > 0 then true else false end

@@ -11,4 +11,6 @@ public interface AreaRepository extends JpaRepository<Area, UUID> {
     List<Area> findByActiveTrue();
 
     Optional<Area> findFirstByNameAndActiveTrue(String name);
+
+    Optional<Area> findByIdAndActiveTrue(UUID id);
 }
