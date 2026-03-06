@@ -25,6 +25,11 @@ SET enterprise_id = @ent_id,
     area_id = '33333333-3333-3333-3333-333333333333'
 WHERE email = 'enterprise@example.com';
 
+-- Link collector user to area (Ben Nghe Ward)
+UPDATE users
+SET area_id = '33333333-3333-3333-3333-333333333333'
+WHERE email = 'collector@example.com';
+
 -- Seed enterprise capabilities (PLASTIC, PAPER)
 INSERT INTO enterprise_waste_capabilities (id, enterprise_id, waste_category_id, daily_capacity_kg, is_accepting)
 VALUES
