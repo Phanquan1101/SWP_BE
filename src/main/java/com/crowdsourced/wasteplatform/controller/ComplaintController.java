@@ -4,6 +4,8 @@ import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.crowdsourced.wasteplatform.dto.common.PageResponse;
 import com.crowdsourced.wasteplatform.dto.complaint.request.CreateComplaintRequest;
 import com.crowdsourced.wasteplatform.dto.complaint.request.ResolveComplaintRequest;
 import com.crowdsourced.wasteplatform.dto.complaint.response.ComplaintResponse;
@@ -38,11 +41,12 @@ public class ComplaintController {
 
     @Operation(summary = "List active complaints")
     @GetMapping("/complaints")
-    public ResponseEntity<ApiResponse<List<ComplaintResponse>>> getComplaints(
+    public ResponseEntity<ApiResponse<PageResponse<ComplaintResponse>>> getComplaints(
             Principal principal,
             @RequestParam(required = false) ComplaintCategory category,
-            @RequestParam(required = false) ComplaintStatus status) {
-        List<ComplaintResponse> data = complaintService.getComplaints(principal, category, status);
+            @RequestParam(required = false) ComplaintStatus status,
+            @ParameterObject Pageable pageable) {
+        PageResponse<ComplaintResponse> data = complaintService.getComplaints(principal, pageable, category, status);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 

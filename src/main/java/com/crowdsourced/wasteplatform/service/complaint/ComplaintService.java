@@ -6,10 +6,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.crowdsourced.wasteplatform.dto.common.PageResponse;
 import com.crowdsourced.wasteplatform.dto.complaint.request.ComplaintNotification;
 import com.crowdsourced.wasteplatform.dto.complaint.request.CreateComplaintRequest;
 import com.crowdsourced.wasteplatform.dto.complaint.request.ResolveComplaintRequest;
@@ -74,11 +77,12 @@ public class ComplaintService {
     }
 
     @Transactional(readOnly = true)
-    public List<ComplaintResponse> getComplaints(Principal principal, 
+    public PageResponse<ComplaintResponse> getComplaints(Principal principal, Pageable pageable, 
         ComplaintCategory category, ComplaintStatus status){
             User user = securityUtil.getLoginUser(principal);
-            return complaintRepository.searchComplaints("admin@example.com".equals(user.getEmail()) && UserType.ADMIN.equals(user.getUserType()) ? null : user.getId(), category, status)
-                    .stream().map(complaintMapper::toResponse).toList();
+            Page<ComplaintResponse> page =  complaintRepository.searchComplaints("admin@example.com".equals(user.getEmail()) && UserType.ADMIN.equals(user.getUserType()) ? null : user.getId(), pageable, category, status)
+                    .map(complaintMapper::toResponse);
+            return PageResponse.from(page);
     }
 
     @Transactional
