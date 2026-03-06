@@ -12,6 +12,7 @@ import com.crowdsourced.wasteplatform.entity.MediaType;
 import com.crowdsourced.wasteplatform.entity.ReportMedia;
 import com.crowdsourced.wasteplatform.entity.ReportStatus;
 import com.crowdsourced.wasteplatform.entity.ReportStatusHistory;
+import com.crowdsourced.wasteplatform.entity.User;
 import com.crowdsourced.wasteplatform.entity.WasteCategory;
 import com.crowdsourced.wasteplatform.entity.WasteReport;
 import com.crowdsourced.wasteplatform.exception.AppException;
@@ -22,8 +23,11 @@ import com.crowdsourced.wasteplatform.mapper.WasteReportMapper;
 import com.crowdsourced.wasteplatform.repository.AreaRepository;
 import com.crowdsourced.wasteplatform.repository.ReportMediaRepository;
 import com.crowdsourced.wasteplatform.repository.ReportStatusHistoryRepository;
+import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.repository.WasteCategoryRepository;
 import com.crowdsourced.wasteplatform.repository.WasteReportRepository;
+import com.crowdsourced.wasteplatform.service.email.EmailService;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -43,9 +47,11 @@ public class CitizenWasteReportService {
     private final WasteCategoryRepository categoryRepository;
     private final ReportMediaRepository mediaRepository;
     private final ReportStatusHistoryRepository historyRepository;
+    private final UserRepository userRepository;
     private final ReportMediaMapper mediaMapper;
     private final ReportStatusHistoryMapper historyMapper;
     private final WasteReportMapper reportMapper;
+    private final EmailService emailService;
 
     @Transactional
     public WasteReportResponse createReport(CreateWasteReportRequest req, String citizenIdStr) {
@@ -95,6 +101,35 @@ public class CitizenWasteReportService {
             .note("Citizen created report")
             .changedBy(citizenId)
             .build());
+            User user = userRepository.findById(citizenId)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found."));
+
+        String subject = "Waste Report Submitted Successfully";
+
+            String content =
+                "Dear User,\n\n" +
+
+                "Thank you for submitting your waste report to our platform.\n\n" +
+
+                "We have successfully received your report and it is currently being reviewed by our administration team. " +
+                "You will be notified once there is an update regarding its processing status.\n\n" +
+
+                "Report Details:\n" +
+                "- Description: " + req.getDescription() + "\n" +
+                "- Location: " + req.getAddressText() + "\n" +
+                "- Estimated Weight (kg): " + req.getEstimatedWeightKg() + "\n\n" +
+
+                "We truly appreciate your contribution in helping us maintain a cleaner and healthier environment.\n\n" +
+
+                "Best regards,\n" +
+                "Waste Management Support Team\n" +
+                "Crowdsourced Waste Platform";
+
+            emailService.sendComplaintResolvedEmail(
+            user.getEmail(),
+            subject,
+            content
+        );
 
         return enrich(saved);
     }

@@ -43,7 +43,8 @@ public class SecurityConfig {
                     "/health/public",
                     "/areas",
                     "/areas/tree",
-                    "/areas/*/leaderboard"
+                    "/areas/*/leaderboard",
+                    "/ws/**"
                 )
                 .permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")

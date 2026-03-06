@@ -25,7 +25,8 @@ import com.crowdsourced.wasteplatform.repository.ReportStatusHistoryRepository;
 import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.repository.WasteCategoryRepository;
 import com.crowdsourced.wasteplatform.repository.WasteReportRepository;
-import java.math.BigDecimal;
+import com.crowdsourced.wasteplatform.service.email.EmailService;
+
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class WasteReportService {
     private final WasteCategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final WasteReportMapper mapper;
+    private final EmailService emailService;
 
     @Transactional
     public WasteReportResponse createForCitizen(UUID citizenId, CreateWasteReportRequest request) {
@@ -54,7 +56,7 @@ public class WasteReportService {
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Area not found"));
         WasteCategory category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Waste category not found"));
-
+            
         WasteReport report = WasteReport.builder()
             .citizenId(citizenId)
             .areaId(areaId)
@@ -113,6 +115,34 @@ public class WasteReportService {
             throw new AppException(ErrorCode.CONFLICT, "Chỉ nhận báo cáo ở trạng thái PENDING");
         }
         changeStatus(report, ReportStatus.ACCEPTED, managerId, "Manager duyệt báo cáo");
+
+        String subject = "Your Waste Report Has Been Accepted";
+        String content =
+        "Dear User,\n\n" +
+
+        "We are pleased to inform you that your submitted waste report has been reviewed and officially accepted by our management team.\n\n" +
+
+        "Our operational team will proceed with the necessary actions to address the reported issue as soon as possible.\n\n" +
+
+        "Report Information:\n" +
+        "- Report ID: " + report.getId() + "\n" +
+        "- Location: " + report.getAddressText() + "\n" +
+        "- Description: " + report.getDescription() + "\n\n" +
+
+        "We sincerely appreciate your proactive contribution to maintaining environmental cleanliness and community well-being.\n\n" +
+
+        "You will receive further updates once the issue has been resolved.\n\n" +
+
+        "Best regards,\n" +
+        "Waste Management Support Team\n" +
+        "Crowdsourced Waste Platform";
+
+        emailService.sendComplaintResolvedEmail(
+            report.getCitizen().getEmail(),
+            subject,
+            content
+        );
+
         return mapper.toResponse(reportRepository.save(report));
     }
 
@@ -123,6 +153,40 @@ public class WasteReportService {
             throw new AppException(ErrorCode.CONFLICT, "Chỉ từ chối báo cáo ở trạng thái PENDING");
         }
         changeStatus(report, ReportStatus.REJECTED, managerId, req.getReason());
+
+        String subject = "Update on Your Waste Report Submission";
+        String content =
+        "Dear User,\n\n" +
+
+        "Thank you for submitting your waste report through our platform.\n\n" +
+
+        "After careful review by our management team, we regret to inform you that your report " +
+        "cannot be approved at this time.\n\n" +
+
+        "Report Information:\n" +
+        "- Report ID: " + report.getId() + "\n" +
+        "- Location: " + report.getAddressText() + "\n\n" +
+
+        "Reason for this decision:\n" +
+        req.getReason() + "\n\n" +
+
+        "If you believe additional clarification or updated information may help, " +
+        "you are welcome to submit a new report.\n\n" +
+
+        "We sincerely appreciate your effort in helping improve environmental quality.\n\n" +
+
+        "Thank you for your understanding.\n\n" +
+
+        "Best regards,\n" +
+        "Waste Management Support Team\n" +
+        "Crowdsourced Waste Platform";
+
+        emailService.sendComplaintResolvedEmail(
+            report.getCitizen().getEmail(),
+            subject,
+            content
+        );
+
         return mapper.toResponse(reportRepository.save(report));
     }
 
