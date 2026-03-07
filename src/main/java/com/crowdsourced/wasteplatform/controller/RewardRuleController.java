@@ -34,6 +34,12 @@ public class RewardRuleController {
         return ApiResponse.success(rewardRuleService.getAll());
     }
 
+    @GetMapping("/enterprise/reward-rules")
+    @Operation(summary = "List reward rules (enterprise manager)")
+    public ApiResponse<List<RewardRuleResponse>> getAllForEnterprise() {
+        return ApiResponse.success(rewardRuleService.getAll());
+    }
+
     @PutMapping("/admin/reward-rules/{wasteCategoryId}")
     @Operation(summary = "Upsert reward rule by waste category")
     public ApiResponse<RewardRuleResponse> upsert(@PathVariable UUID wasteCategoryId,
@@ -41,9 +47,22 @@ public class RewardRuleController {
         return ApiResponse.success(rewardRuleService.upsert(wasteCategoryId, request));
     }
 
+    @PutMapping("/enterprise/reward-rules/{wasteCategoryId}")
+    @Operation(summary = "Upsert reward rule by waste category (enterprise manager)")
+    public ApiResponse<RewardRuleResponse> upsertForEnterprise(@PathVariable UUID wasteCategoryId,
+                                                               @Valid @RequestBody UpsertRewardRuleRequest request) {
+        return ApiResponse.success(rewardRuleService.upsert(wasteCategoryId, request));
+    }
+
     @PatchMapping("/admin/reward-rules/{id}/toggle")
     @Operation(summary = "Toggle reward rule active flag")
     public ApiResponse<RewardRuleResponse> toggle(@PathVariable UUID id) {
+        return ApiResponse.success(rewardRuleService.toggle(id));
+    }
+
+    @PatchMapping("/enterprise/reward-rules/{id}/toggle")
+    @Operation(summary = "Toggle reward rule active flag (enterprise manager)")
+    public ApiResponse<RewardRuleResponse> toggleForEnterprise(@PathVariable UUID id) {
         return ApiResponse.success(rewardRuleService.toggle(id));
     }
 }
