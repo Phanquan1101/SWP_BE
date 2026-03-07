@@ -9,6 +9,17 @@ spring:
       ddl-auto: create-drop
   flyway:
     enabled: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: damanhbangthpt@gmail.com
+    password: mipa kchg ncld dkje
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 app:
   jwt:

@@ -20,6 +20,18 @@ spring:
     enabled: true
     clean-disabled: false
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: example@gmail.com
+    password: app password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 app:
   area:
     root-id: 11111111-1111-1111-1111-111111111111
