@@ -33,12 +33,14 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class CitizenWasteReportService {
 
@@ -125,11 +127,16 @@ public class CitizenWasteReportService {
                 "Waste Management Support Team\n" +
                 "Crowdsourced Waste Platform";
 
+        // Email khong duoc phep lam fail luong tao report. Neu SMTP loi, he thong van luu report thanh cong.
+        try {
             emailService.sendComplaintResolvedEmail(
-            user.getEmail(),
-            subject,
-            content
-        );
+                user.getEmail(),
+                subject,
+                content
+            );
+        } catch (Exception ex) {
+            log.warn("Cannot send report confirmation email for report {}", saved.getId(), ex);
+        }
 
         return enrich(saved);
     }

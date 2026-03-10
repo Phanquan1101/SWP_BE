@@ -7,12 +7,13 @@ import lombok.Value;
 
 @Value
 @Builder
-public class VoucherRedemptionResponse {
+public class RedeemVoucherResponse {
     UUID redemptionId;
     UUID voucherId;
+    String voucherCode;
     String voucherTitle;
     String redeemCode;
     Instant redeemedAt;
-    String status;
-    String note;
+    Long remainingPoints;
+    String message;
 }

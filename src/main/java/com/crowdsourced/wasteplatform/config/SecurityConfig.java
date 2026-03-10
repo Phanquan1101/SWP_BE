@@ -44,6 +44,8 @@ public class SecurityConfig {
                     "/areas",
                     "/areas/tree",
                     "/areas/*/leaderboard",
+                    "/vouchers",
+                    "/vouchers/*",
                     "/ws/**"
                 )
                 .permitAll()

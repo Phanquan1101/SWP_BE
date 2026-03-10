@@ -22,6 +22,9 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
 
     Page<PointTransaction> findAllByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 
+    @Query("select coalesce(sum(pt.points), 0) from PointTransaction pt where pt.userId = :userId")
+    long sumPointsByUserId(@Param("userId") UUID userId);
+
     @Query(value = """
         SELECT
             pt.user_id AS userId,

@@ -34,6 +34,9 @@ public class OpenApiConfig {
                 new Tag().name("Collector"),
                 new Tag().name("Reports"),
                 new Tag().name("Rewards"),
+                new Tag().name("Enterprise - Vouchers"),
+                new Tag().name("Vouchers"),
+                new Tag().name("Citizen - Voucher Redemption"),
                 new Tag().name("Complaints"),
                 new Tag().name("Notifications")
             ));
