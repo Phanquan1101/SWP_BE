@@ -23,6 +23,7 @@ import com.crowdsourced.wasteplatform.repository.ReportAssignmentRepository;
 import com.crowdsourced.wasteplatform.repository.ReportMediaRepository;
 import com.crowdsourced.wasteplatform.repository.ReportStatusHistoryRepository;
 import com.crowdsourced.wasteplatform.repository.WasteReportRepository;
+import com.crowdsourced.wasteplatform.service.email.EmailService;
 import com.crowdsourced.wasteplatform.service.reward.PointAwardService;
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +45,7 @@ public class CollectorAssignmentService {
     private final ReportMediaMapper mediaMapper;
     private final ReportStatusHistoryMapper historyMapper;
     private final WasteReportMapper reportMapper;
+    private final EmailService emailService;
 
     @Transactional(readOnly = true)
     public PageResponse<AssignmentResponse> getMyAssignments(String collectorIdStr, String statusOptional, Pageable pageable) {
@@ -100,6 +102,33 @@ public class CollectorAssignmentService {
 
             if (reportTo == ReportStatus.COLLECTED) {
                 pointAwardService.awardPointsForReport(report.getId().toString(), collectorIdStr);
+
+                String subject = "Your Waste Report Has Been Accepted";
+        String content =
+        "Dear User,\n\n" +
+
+        "We are pleased to inform you that your submitted waste report has been reviewed and officially accepted by our management team.\n\n" +
+
+        "Our operational team will proceed with the necessary actions to address the reported issue as soon as possible.\n\n" +
+
+        "Report Information:\n" +
+        "- Report ID: " + report.getId() + "\n" +
+        "- Location: " + report.getAddressText() + "\n" +
+        "- Description: " + report.getDescription() + "\n\n" +
+
+        "We sincerely appreciate your proactive contribution to maintaining environmental cleanliness and community well-being.\n\n" +
+
+        "You will receive further updates once the issue has been resolved.\n\n" +
+
+        "Best regards,\n" +
+        "Waste Management Support Team\n" +
+        "Crowdsourced Waste Platform";
+
+        emailService.sendComplaintResolvedEmail(
+            report.getCitizen().getEmail(),
+            subject,
+            content
+        );
             }
         }
 
