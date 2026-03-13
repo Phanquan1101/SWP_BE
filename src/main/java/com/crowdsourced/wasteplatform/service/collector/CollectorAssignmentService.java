@@ -104,6 +104,17 @@ public class CollectorAssignmentService {
                 pointAwardService.awardPointsForReport(report.getId().toString(), collectorIdStr);
 
                 String subject = "Your Waste Report Has Been Accepted";
+
+                StringBuilder mediaSection = new StringBuilder();
+
+if (report.getMediaList() != null && !report.getMediaList().isEmpty()) {
+    mediaSection.append("- Media Attachments:\n");
+    for (ReportMedia media : report.getMediaList()) {
+        mediaSection.append("  + ").append(media).append("\n");
+    }
+} else {
+    mediaSection.append("- Media Attachments: None\n");
+}
         String content =
         "Dear User,\n\n" +
 
@@ -113,8 +124,17 @@ public class CollectorAssignmentService {
 
         "Report Information:\n" +
         "- Report ID: " + report.getId() + "\n" +
-        "- Location: " + report.getAddressText() + "\n" +
-        "- Description: " + report.getDescription() + "\n\n" +
+        "- Area: " + report.getArea().getName() + "\n" +
+        "- Waste Category: " + report.getWasteCategory().getName() + "\n" +
+        "- Status: " + report.getCurrentStatus() + "\n" +
+        "- Estimated Weight (kg): " + report.getEstimatedWeightKg() + "\n" +
+        "- Actual Weight (kg): " + report.getActualWeightKg() + "\n" +
+        "- Location Coordinates: (" + report.getLatitude() + ", " + report.getLongitude() + ")\n" +
+        "- Address: " + report.getAddressText() + "\n" +
+        "- Description: " + report.getDescription() + "\n" +
+        "- Created At: " + report.getCreatedAt() + "\n" +
+        "- Last Updated: " + report.getUpdatedAt() + "\n" +
+        mediaSection.toString() + "\n" +
 
         "We sincerely appreciate your proactive contribution to maintaining environmental cleanliness and community well-being.\n\n" +
 

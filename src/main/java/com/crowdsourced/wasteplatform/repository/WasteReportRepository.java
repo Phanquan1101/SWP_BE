@@ -5,6 +5,8 @@ import com.crowdsourced.wasteplatform.entity.ReportStatus;
 import java.util.Optional;
 import java.util.List;
 import java.util.UUID;
+
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,4 +34,7 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, UUID> 
     Page<WasteReport> findInbox(@Param("areaId") UUID areaId,
                                 @Param("status") ReportStatus status,
                                 Pageable pageable);
+
+    @EntityGraph(attributePaths = {"citizen", "area", "wasteCategory", "mediaList"})
+    Optional<WasteReport> findById(UUID id);
 }
