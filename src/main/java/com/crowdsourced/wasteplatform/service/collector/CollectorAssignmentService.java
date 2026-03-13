@@ -110,7 +110,7 @@ public class CollectorAssignmentService {
 if (report.getMediaList() != null && !report.getMediaList().isEmpty()) {
     mediaSection.append("- Media Attachments:\n");
     for (ReportMedia media : report.getMediaList()) {
-        mediaSection.append("  + ").append(media).append("\n");
+        mediaSection.append("  + ").append(media.getUrl()).append("\n");
     }
 } else {
     mediaSection.append("- Media Attachments: None\n");
