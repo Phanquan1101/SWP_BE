@@ -123,7 +123,6 @@ if (report.getMediaList() != null && !report.getMediaList().isEmpty()) {
         "Our operational team will proceed with the necessary actions to address the reported issue as soon as possible.\n\n" +
 
         "Report Information:\n" +
-        "- Report ID: " + report.getId() + "\n" +
         "- Area: " + report.getArea().getName() + "\n" +
         "- Waste Category: " + report.getWasteCategory().getName() + "\n" +
         "- Status: " + report.getCurrentStatus() + "\n" +
