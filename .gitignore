@@ -34,5 +34,4 @@ build/
 
 ### Env files ###
 .env
-.env.*
-!.env.example
+!.env
