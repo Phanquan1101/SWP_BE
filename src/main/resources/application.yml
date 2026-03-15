@@ -18,13 +18,13 @@ spring:
 
   flyway:
     enabled: true
-    clean-disabled: false
+    clean-disabled: true
 
   mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -34,7 +34,7 @@ spring:
 
 app:
   area:
-    root-id: ${ROOT_ID}
+    root-id: ${ROOT_ID:11111111-1111-1111-1111-111111111111}
   jwt:
     secret: ${JWT_SECRET}
     access-token-exp-minutes: 30
