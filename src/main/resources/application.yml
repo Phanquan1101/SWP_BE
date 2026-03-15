@@ -1,5 +1,6 @@
 server:
   port: ${PORT:8080}
+  address: 0.0.0.0
 
 spring:
   datasource:
@@ -36,7 +37,7 @@ app:
   area:
     root-id: ${ROOT_ID:11111111-1111-1111-1111-111111111111}
   jwt:
-    secret: ${JWT_SECRET}
+    secret: ${JWT_SECRET:change-me-change-me-change-me-change-me}
     access-token-exp-minutes: 30
     refresh-token-exp-days: 14
 
