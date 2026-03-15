@@ -5,6 +5,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
@@ -15,30 +16,45 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI openAPI() {
+
+        // JWT Bearer authentication scheme
         SecurityScheme bearerScheme = new SecurityScheme()
-            .name("bearerAuth")
-            .type(SecurityScheme.Type.HTTP)
-            .scheme("bearer")
-            .bearerFormat("JWT");
+                .name("bearerAuth")
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT");
 
         return new OpenAPI()
-            .info(new Info().title("Crowdsourced Waste Collection & Recycling Platform API"))
-            .components(new Components().addSecuritySchemes("bearerAuth", bearerScheme))
-            .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
-            .tags(List.of(
-                new Tag().name("Auth"),
-                new Tag().name("Admin"),
-                new Tag().name("Area"),
-                new Tag().name("Citizen"),
-                new Tag().name("Enterprise"),
-                new Tag().name("Collector"),
-                new Tag().name("Reports"),
-                new Tag().name("Rewards"),
-                new Tag().name("Enterprise - Vouchers"),
-                new Tag().name("Vouchers"),
-                new Tag().name("Citizen - Voucher Redemption"),
-                new Tag().name("Complaints"),
-                new Tag().name("Notifications")
-            ));
+                .info(new Info()
+                        .title("Crowdsourced Waste Collection & Recycling Platform API")
+                        .version("1.0"))
+
+                // Important: force Swagger to use HTTPS for Railway deployment
+                .servers(List.of(
+                        new Server().url("https://swpbe-production-b987.up.railway.app")
+                ))
+
+                // Security configuration
+                .components(new Components()
+                        .addSecuritySchemes("bearerAuth", bearerScheme))
+
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+
+                // API tags
+                .tags(List.of(
+                        new Tag().name("Auth"),
+                        new Tag().name("Admin"),
+                        new Tag().name("Area"),
+                        new Tag().name("Citizen"),
+                        new Tag().name("Enterprise"),
+                        new Tag().name("Collector"),
+                        new Tag().name("Reports"),
+                        new Tag().name("Rewards"),
+                        new Tag().name("Enterprise - Vouchers"),
+                        new Tag().name("Vouchers"),
+                        new Tag().name("Citizen - Voucher Redemption"),
+                        new Tag().name("Complaints"),
+                        new Tag().name("Notifications")
+                ));
     }
 }
