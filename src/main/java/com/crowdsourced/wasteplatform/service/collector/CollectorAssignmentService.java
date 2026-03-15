@@ -28,6 +28,7 @@ import com.crowdsourced.wasteplatform.service.reward.PointAwardService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CollectorAssignmentService {
 
     private final ReportAssignmentRepository assignmentRepository;
@@ -102,52 +104,7 @@ public class CollectorAssignmentService {
 
             if (reportTo == ReportStatus.COLLECTED) {
                 pointAwardService.awardPointsForReport(report.getId().toString(), collectorIdStr);
-
-                String subject = "Your Waste Report Has Been Accepted";
-
-                StringBuilder mediaSection = new StringBuilder();
-
-if (report.getMediaList() != null && !report.getMediaList().isEmpty()) {
-    mediaSection.append("- Media Attachments:\n");
-    for (ReportMedia media : report.getMediaList()) {
-        mediaSection.append("  + ").append(media.getUrl()).append("\n");
-    }
-} else {
-    mediaSection.append("- Media Attachments: None\n");
-}
-        String content =
-        "Dear User,\n\n" +
-
-        "We are pleased to inform you that your submitted waste report has been reviewed and officially accepted by our management team.\n\n" +
-
-        "Our operational team will proceed with the necessary actions to address the reported issue as soon as possible.\n\n" +
-
-        "Report Information:\n" +
-        "- Area: " + report.getArea().getName() + "\n" +
-        "- Waste Category: " + report.getWasteCategory().getName() + "\n" +
-        "- Status: " + report.getCurrentStatus() + "\n" +
-        "- Estimated Weight (kg): " + report.getEstimatedWeightKg() + "\n" +
-        "- Actual Weight (kg): " + report.getActualWeightKg() + "\n" +
-        "- Location Coordinates: (" + report.getLatitude() + ", " + report.getLongitude() + ")\n" +
-        "- Address: " + report.getAddressText() + "\n" +
-        "- Description: " + report.getDescription() + "\n" +
-        "- Created At: " + report.getCreatedAt() + "\n" +
-        "- Last Updated: " + report.getUpdatedAt() + "\n" +
-        mediaSection.toString() + "\n" +
-
-        "We sincerely appreciate your proactive contribution to maintaining environmental cleanliness and community well-being.\n\n" +
-
-        "You will receive further updates once the issue has been resolved.\n\n" +
-
-        "Best regards,\n" +
-        "Waste Management Support Team\n" +
-        "Crowdsourced Waste Platform";
-
-        emailService.sendComplaintResolvedEmail(
-            report.getCitizen().getEmail(),
-            subject,
-            content
-        );
+                triggerCollectedNotification(report);
             }
         }
 
@@ -238,5 +195,57 @@ if (report.getMediaList() != null && !report.getMediaList().isEmpty()) {
         } catch (Exception ex) {
             throw new AppException(ErrorCode.BAD_REQUEST, "Invalid UUID for " + field);
         }
+    }
+
+    private void triggerCollectedNotification(WasteReport report) {
+        try {
+            String subject = "Your Waste Report Has Been Accepted";
+            String content = buildCollectedEmailContent(report);
+            String citizenEmail = report.getCitizen() != null ? report.getCitizen().getEmail() : null;
+            if (citizenEmail == null || citizenEmail.isBlank()) {
+                log.warn("Skip collected notification because citizen email is empty for report {}", report.getId());
+                return;
+            }
+            // Send email as async side-effect: failures must not break status update API.
+            emailService.sendComplaintResolvedEmail(citizenEmail, subject, content);
+        } catch (Exception ex) {
+            log.warn("Skip collected notification for report {} because of error: {}", report.getId(), ex.getMessage());
+        }
+    }
+
+    private String buildCollectedEmailContent(WasteReport report) {
+        StringBuilder mediaSection = new StringBuilder();
+        if (report.getMediaList() != null && !report.getMediaList().isEmpty()) {
+            mediaSection.append("- Media Attachments:\n");
+            for (ReportMedia media : report.getMediaList()) {
+                mediaSection.append("  + ").append(media.getUrl()).append("\n");
+            }
+        } else {
+            mediaSection.append("- Media Attachments: None\n");
+        }
+
+        String areaName = report.getArea() != null ? report.getArea().getName() : "N/A";
+        String categoryName = report.getWasteCategory() != null ? report.getWasteCategory().getName() : "N/A";
+
+        return "Dear User,\n\n"
+            + "We are pleased to inform you that your submitted waste report has been reviewed and officially accepted by our management team.\n\n"
+            + "Our operational team will proceed with the necessary actions to address the reported issue as soon as possible.\n\n"
+            + "Report Information:\n"
+            + "- Area: " + areaName + "\n"
+            + "- Waste Category: " + categoryName + "\n"
+            + "- Status: " + report.getCurrentStatus() + "\n"
+            + "- Estimated Weight (kg): " + report.getEstimatedWeightKg() + "\n"
+            + "- Actual Weight (kg): " + report.getActualWeightKg() + "\n"
+            + "- Location Coordinates: (" + report.getLatitude() + ", " + report.getLongitude() + ")\n"
+            + "- Address: " + report.getAddressText() + "\n"
+            + "- Description: " + report.getDescription() + "\n"
+            + "- Created At: " + report.getCreatedAt() + "\n"
+            + "- Last Updated: " + report.getUpdatedAt() + "\n"
+            + mediaSection + "\n"
+            + "We sincerely appreciate your proactive contribution to maintaining environmental cleanliness and community well-being.\n\n"
+            + "You will receive further updates once the issue has been resolved.\n\n"
+            + "Best regards,\n"
+            + "Waste Management Support Team\n"
+            + "Crowdsourced Waste Platform";
     }
 }
