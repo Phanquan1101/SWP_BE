@@ -78,9 +78,8 @@ public class ComplaintController {
     @PatchMapping("/admin/complaint/{id}/processing")
     public ResponseEntity<ApiResponse<ComplaintResponse>> processing(
         @PathVariable("id") UUID id,
-        @Valid @RequestBody ResolveComplaintRequest request, 
-        @RequestParam(required = false) ComplaintStatus status) {
-        ComplaintResponse response = complaintService.processingComplaint(id, request, status);
+        @Valid @RequestBody ResolveComplaintRequest request) {
+        ComplaintResponse response = complaintService.processingComplaint(id, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
