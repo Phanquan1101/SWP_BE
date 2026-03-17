@@ -10,4 +10,6 @@ public interface WasteCapabilityRepository extends JpaRepository<WasteCapability
     Optional<WasteCapability> findByWasteCategoryId(UUID wasteCategoryId);
 
     boolean existsByWasteCategoryIdAndAcceptingTrue(UUID wasteCategoryId);
+
+    long countByAcceptingTrue();
 }

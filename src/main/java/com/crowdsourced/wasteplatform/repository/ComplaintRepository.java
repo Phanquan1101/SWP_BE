@@ -3,7 +3,7 @@ package com.crowdsourced.wasteplatform.repository;
 import com.crowdsourced.wasteplatform.entity.Complaint;
 import com.crowdsourced.wasteplatform.entity.ComplaintCategory;
 import com.crowdsourced.wasteplatform.entity.ComplaintStatus;
-
+import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -29,4 +29,8 @@ public interface ComplaintRepository extends JpaRepository<Complaint, UUID> {
             @Param("category") ComplaintCategory category,
             @Param("status") ComplaintStatus status
     );
+
+    long countByCreatedAtBetween(Instant start, Instant end);
+
+    long countByStatusAndResolvedAtBetween(ComplaintStatus status, Instant start, Instant end);
 }
