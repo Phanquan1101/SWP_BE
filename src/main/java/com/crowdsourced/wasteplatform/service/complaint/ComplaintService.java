@@ -86,12 +86,12 @@ public class ComplaintService {
     }
 
     @Transactional
-    public ComplaintResponse processingComplaint(UUID complaintId, ResolveComplaintRequest request, ComplaintStatus status){
+    public ComplaintResponse processingComplaint(UUID complaintId, ResolveComplaintRequest request){
         Optional<Complaint> complaintOptional = complaintRepository.findById(complaintId);
         User user = userRepository.findByEmail("admin@example.com").orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Email is not found."));
         if(complaintOptional.isPresent()){
             Complaint complaint = complaintOptional.get();
-            complaint.setStatus(status);
+            complaint.setStatus(request.getStatus());
             complaint.setResolvedAt(Instant.now());
             complaint.setResolvedBy(user.getId());
             complaint.setResolutionNote(request.getResolutionNote());
@@ -120,7 +120,7 @@ public class ComplaintService {
 
             String subject;
             String content;
-            switch (status) {
+            switch (request.getStatus()) {
         case RESOLVED:
             subject = "Your Complaint Has Been Resolved";
             content = "Your complaint has been successfully resolved.";
