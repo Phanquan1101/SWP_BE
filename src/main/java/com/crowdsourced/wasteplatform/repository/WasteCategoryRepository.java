@@ -11,4 +11,6 @@ public interface WasteCategoryRepository extends JpaRepository<WasteCategory, UU
     Optional<WasteCategory> findByCode(String code);
 
     List<WasteCategory> findByActiveTrue();
+
+    long countByActiveTrue();
 }

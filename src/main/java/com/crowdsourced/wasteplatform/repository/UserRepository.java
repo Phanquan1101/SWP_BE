@@ -2,6 +2,8 @@ package com.crowdsourced.wasteplatform.repository;
 
 import com.crowdsourced.wasteplatform.entity.User;
 import com.crowdsourced.wasteplatform.entity.UserStatus;
+import com.crowdsourced.wasteplatform.repository.projection.AdminCollectorsByAreaProjection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -56,4 +58,29 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.id = :id")
     Optional<User> findByIdForUpdate(@Param("id") UUID id);
+
+    @Query(value = """
+        SELECT COUNT(DISTINCT u.id)
+        FROM users u
+        JOIN user_roles ur ON ur.user_id = u.id
+        JOIN roles r ON r.id = ur.role_id
+        WHERE r.code = :collectorRoleCode
+          AND u.status = 'ACTIVE'
+        """, nativeQuery = true)
+    long countActiveCollectors(@Param("collectorRoleCode") String collectorRoleCode);
+
+    @Query(value = """
+        SELECT
+            a.id AS areaId,
+            a.name AS areaName,
+            COUNT(DISTINCT u.id) AS collectorCount
+        FROM users u
+        JOIN user_roles ur ON ur.user_id = u.id
+        JOIN roles r ON r.id = ur.role_id
+        JOIN areas a ON a.id = u.area_id
+        WHERE r.code = :collectorRoleCode
+        GROUP BY a.id, a.name
+        ORDER BY a.name ASC
+        """, nativeQuery = true)
+    List<AdminCollectorsByAreaProjection> countCollectorsByArea(@Param("collectorRoleCode") String collectorRoleCode);
 }

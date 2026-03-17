@@ -2,6 +2,9 @@ package com.crowdsourced.wasteplatform.repository;
 
 import com.crowdsourced.wasteplatform.entity.WasteReport;
 import com.crowdsourced.wasteplatform.entity.ReportStatus;
+import com.crowdsourced.wasteplatform.repository.projection.AdminReportsByMonthProjection;
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.List;
 import java.util.UUID;
@@ -37,4 +40,43 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, UUID> 
 
     @EntityGraph(attributePaths = {"citizen", "area", "wasteCategory", "mediaList"})
     Optional<WasteReport> findById(UUID id);
+
+    @Query("""
+        select count(wr) from WasteReport wr
+        where wr.createdAt between :start and :end
+          and wr.currentStatus in :statuses
+        """)
+    long countByCreatedAtRangeAndStatuses(@Param("start") Instant start,
+                                          @Param("end") Instant end,
+                                          @Param("statuses") List<ReportStatus> statuses);
+
+    @Query("""
+        select coalesce(sum(coalesce(wr.actualWeightKg, wr.estimatedWeightKg)), 0)
+        from WasteReport wr
+        where wr.createdAt between :start and :end
+          and wr.currentStatus in :statuses
+        """)
+    BigDecimal sumWeightByCreatedAtRangeAndStatuses(@Param("start") Instant start,
+                                                    @Param("end") Instant end,
+                                                    @Param("statuses") List<ReportStatus> statuses);
+
+    @Query("""
+        select count(wr) from WasteReport wr
+        where wr.citizenId = :citizenId
+          and wr.createdAt between :start and :end
+        """)
+    long countByCitizenIdAndCreatedAtBetween(@Param("citizenId") UUID citizenId,
+                                             @Param("start") Instant start,
+                                             @Param("end") Instant end);
+
+    @Query(value = """
+        SELECT
+            DATE_FORMAT(wr.created_at, '%Y-%m') AS month,
+            COUNT(*) AS reportCount
+        FROM waste_reports wr
+        WHERE YEAR(wr.created_at) = :year
+        GROUP BY DATE_FORMAT(wr.created_at, '%Y-%m')
+        ORDER BY month ASC
+        """, nativeQuery = true)
+    List<AdminReportsByMonthProjection> countReportsByMonth(@Param("year") int year);
 }

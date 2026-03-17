@@ -25,8 +25,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,7 +59,18 @@ public class CitizenVoucherService {
 
     @Transactional(readOnly = true)
     public PageResponse<VoucherResponse> getPublicVouchers(String citizenIdOrNull, Pageable pageable) {
-        Page<Voucher> page = voucherRepository.findByActiveTrue(pageable);
+        Pageable resolvedPageable = pageable;
+        if (pageable == null) {
+            resolvedPageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
+        } else if (pageable.getSort().isUnsorted()) {
+            resolvedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+            );
+        }
+
+        Page<Voucher> page = voucherRepository.findByActiveTrue(resolvedPageable);
         Long userPoints = citizenIdOrNull == null ? null : getCurrentPointBalance(citizenIdOrNull);
         Page<VoucherResponse> mapped = page.map(voucher -> enrichVoucher(voucher, userPoints));
         return PageResponse.from(mapped);
