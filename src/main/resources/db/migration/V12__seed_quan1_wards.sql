@@ -589,8 +589,6 @@ SET parent_id = 'D0000005-0000-0000-0000-000000000000',
     updated_at = CURRENT_TIMESTAMP
 WHERE id = 'D0000005-0000-0000-0000-000000000014';
 
--- District level
-INSERT IGNORE INTO areas (id, parent_id, name, is_active, created_at, updated_at)
 
 -- District level
 INSERT IGNORE INTO areas (id, parent_id, name, is_active, created_at, updated_at)
