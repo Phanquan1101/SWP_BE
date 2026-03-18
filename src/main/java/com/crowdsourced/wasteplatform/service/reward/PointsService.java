@@ -1,6 +1,7 @@
 package com.crowdsourced.wasteplatform.service.reward;
 
 import com.crowdsourced.wasteplatform.dto.common.PageResponse;
+import com.crowdsourced.wasteplatform.dto.points.response.PointBalanceResponse;
 import com.crowdsourced.wasteplatform.dto.points.response.PointTransactionResponse;
 import com.crowdsourced.wasteplatform.exception.AppException;
 import com.crowdsourced.wasteplatform.exception.ErrorCode;
@@ -27,6 +28,15 @@ public class PointsService {
             .findAllByUserIdOrderByCreatedAtDesc(userId, pageable)
             .map(pointTransactionMapper::toResponse);
         return PageResponse.from(page);
+    }
+
+    @Transactional(readOnly = true)
+    public PointBalanceResponse getCitizenBalance(String citizenId) {
+        UUID userId = parseUuid(citizenId, "citizenId");
+        long currentPoints = pointTransactionRepository.sumPointsByUserId(userId);
+        return PointBalanceResponse.builder()
+            .currentPoints(currentPoints)
+            .build();
     }
 
     private UUID parseUuid(String value, String field) {

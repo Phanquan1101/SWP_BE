@@ -1,6 +1,7 @@
 package com.crowdsourced.wasteplatform.controller;
 
 import com.crowdsourced.wasteplatform.dto.common.PageResponse;
+import com.crowdsourced.wasteplatform.dto.points.response.PointBalanceResponse;
 import com.crowdsourced.wasteplatform.dto.points.response.PointTransactionResponse;
 import com.crowdsourced.wasteplatform.exception.ApiResponse;
 import com.crowdsourced.wasteplatform.service.reward.PointsService;
@@ -30,6 +31,12 @@ public class PointsController {
     @Operation(summary = "Get point transaction history for current citizen")
     public ApiResponse<PageResponse<PointTransactionResponse>> getMyTransactions(@ParameterObject Pageable pageable) {
         return ApiResponse.success(pointsService.getCitizenTransactions(currentUserId(), pageable));
+    }
+
+    @GetMapping("/citizen/points/balance")
+    @Operation(summary = "Get current point balance for current citizen")
+    public ApiResponse<PointBalanceResponse> getMyBalance() {
+        return ApiResponse.success(pointsService.getCitizenBalance(currentUserId()));
     }
 
     private String currentUserId() {
