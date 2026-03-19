@@ -22,14 +22,15 @@ public interface AdminMapper {
 
     @Mapping(target = "id", source = "user.id")
     @Mapping(target = "areaId", source = "user.areaId")
-    @Mapping(target = "email", expression = "java(maskEmail(user.getEmail()))")
+    @Mapping(target = "email", expression = "java(maskEmail(user))")
     CollectorPickResponse toCollectorPick(User user);
 
     default String map(UUID value) {
         return value == null ? null : value.toString();
     }
 
-    default String maskEmail(String email) {
+    default String maskEmail(User user) {
+        String email = user == null ? null : user.getEmail();
         if (email == null || email.isBlank()) {
             return null;
         }
