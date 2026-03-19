@@ -18,8 +18,6 @@ public class WasteReportResponse {
     String description;
     BigDecimal estimatedWeightKg;
     BigDecimal actualWeightKg;
-    BigDecimal latitude;
-    BigDecimal longitude;
     String addressText;
     ReportStatus currentStatus;
     Instant createdAt;

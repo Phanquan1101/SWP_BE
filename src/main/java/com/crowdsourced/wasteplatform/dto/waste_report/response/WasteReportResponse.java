@@ -19,8 +19,6 @@ public class WasteReportResponse {
     private final ReportStatus status;
     private final BigDecimal estimatedWeightKg;
     private final BigDecimal actualWeightKg;
-    private final BigDecimal latitude;
-    private final BigDecimal longitude;
     private final String addressText;
     private final String description;
     private final Instant createdAt;

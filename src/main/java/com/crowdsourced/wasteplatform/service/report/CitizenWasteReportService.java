@@ -77,8 +77,6 @@ public class CitizenWasteReportService {
             .wasteCategoryId(category.getId())
             .description(req.getDescription())
             .estimatedWeightKg(req.getEstimatedWeightKg())
-            .latitude(req.getLatitude())
-            .longitude(req.getLongitude())
             .addressText(req.getAddressText())
             .currentStatus(ReportStatus.PENDING)
             .allowEditUntil(allowEditUntil)

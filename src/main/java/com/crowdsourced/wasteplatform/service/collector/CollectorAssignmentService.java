@@ -79,12 +79,6 @@ public class CollectorAssignmentService {
 
         validateTransition(from, to);
 
-        if (req.getLastKnownLatitude() != null) {
-            assignment.setLastKnownLatitude(req.getLastKnownLatitude());
-        }
-        if (req.getLastKnownLongitude() != null) {
-            assignment.setLastKnownLongitude(req.getLastKnownLongitude());
-        }
         assignment.setCollectorStatus(to);
         assignmentRepository.save(assignment);
 
@@ -140,8 +134,6 @@ public class CollectorAssignmentService {
             .areaId(report.getAreaId())
             .wasteCategoryId(report.getWasteCategoryId())
             .addressText(report.getAddressText())
-            .latitude(report.getLatitude())
-            .longitude(report.getLongitude())
             .currentStatus(report.getCurrentStatus())
             .build();
     }
@@ -236,7 +228,6 @@ public class CollectorAssignmentService {
             + "- Status: " + report.getCurrentStatus() + "\n"
             + "- Estimated Weight (kg): " + report.getEstimatedWeightKg() + "\n"
             + "- Actual Weight (kg): " + report.getActualWeightKg() + "\n"
-            + "- Location Coordinates: (" + report.getLatitude() + ", " + report.getLongitude() + ")\n"
             + "- Address: " + report.getAddressText() + "\n"
             + "- Description: " + report.getDescription() + "\n"
             + "- Created At: " + report.getCreatedAt() + "\n"

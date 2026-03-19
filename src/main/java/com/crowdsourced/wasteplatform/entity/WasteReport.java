@@ -73,10 +73,10 @@ public class WasteReport {
     @Column(name = "actual_weight_kg", precision = 12, scale = 3)
     private BigDecimal actualWeightKg;
 
-    @Column(name = "latitude", nullable = false, precision = 10, scale = 7)
+    @Column(name = "latitude", precision = 10, scale = 7)
     private BigDecimal latitude;
 
-    @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
+    @Column(name = "longitude", precision = 10, scale = 7)
     private BigDecimal longitude;
 
     @Column(name = "address_text", length = 255)

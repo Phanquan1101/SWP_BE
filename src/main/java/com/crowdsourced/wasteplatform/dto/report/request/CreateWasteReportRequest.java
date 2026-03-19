@@ -1,7 +1,5 @@
 package com.crowdsourced.wasteplatform.dto.report.request;
 
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -24,16 +22,6 @@ public class CreateWasteReportRequest {
     @NotNull
     @Positive
     private BigDecimal estimatedWeightKg;
-
-    @NotNull
-    @DecimalMin(value = "-90.0")
-    @DecimalMax(value = "90.0")
-    private BigDecimal latitude;
-
-    @NotNull
-    @DecimalMin(value = "-180.0")
-    @DecimalMax(value = "180.0")
-    private BigDecimal longitude;
 
     @Size(max = 255)
     private String addressText;

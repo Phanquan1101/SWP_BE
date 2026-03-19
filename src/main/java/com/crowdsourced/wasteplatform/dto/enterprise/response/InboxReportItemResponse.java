@@ -18,6 +18,4 @@ public class InboxReportItemResponse {
     ReportStatus currentStatus;
     UUID citizenId;
     String addressText;
-    BigDecimal latitude;
-    BigDecimal longitude;
 }

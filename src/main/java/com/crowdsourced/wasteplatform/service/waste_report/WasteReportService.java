@@ -63,8 +63,6 @@ public class WasteReportService {
             .wasteCategoryId(categoryId)
             .description(request.getDescription())
             .estimatedWeightKg(request.getEstimatedWeightKg())
-            .latitude(request.getLatitude())
-            .longitude(request.getLongitude())
             .addressText(request.getAddressText())
             .currentStatus(ReportStatus.PENDING)
             .build();
