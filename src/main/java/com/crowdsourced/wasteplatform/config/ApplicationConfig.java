@@ -6,11 +6,14 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.RestClient;
 
 @Configuration
 @EnableAsync
@@ -32,6 +35,16 @@ public class ApplicationConfig {
     @Bean
     public Clock clock() {
         return Clock.systemUTC();
+    }
+
+    @Bean(name = "emailRestClient")
+    public RestClient emailRestClient(@Value("${app.email.timeout-ms:5000}") int timeoutMs) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(timeoutMs);
+        factory.setReadTimeout(timeoutMs);
+        return RestClient.builder()
+            .requestFactory(factory)
+            .build();
     }
 
     @Bean(name = "mailTaskExecutor")

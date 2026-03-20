@@ -21,24 +21,17 @@ spring:
     enabled: true
     clean-disabled: true
 
-  mail:
-    host: ${MAIL_HOST:}
-    port: ${MAIL_PORT:465}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
-    properties:
-      mail:
-        smtp:
-          auth: ${MAIL_SMTP_AUTH:true}
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-          starttls:
-            enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
-
 app:
   area:
     root-id: ${ROOT_ID:11111111-1111-1111-1111-111111111111}
+  email:
+    provider: ${EMAIL_PROVIDER:RESEND}
+    api-key: ${EMAIL_API_KEY:}
+    from: ${EMAIL_FROM:no-reply@example.com}
+    from-name: ${EMAIL_FROM_NAME:Crowdsourced Waste Platform}
+    resend-url: ${EMAIL_RESEND_URL:https://api.resend.com/emails}
+    brevo-url: ${EMAIL_BREVO_URL:https://api.brevo.com/v3/smtp/email}
+    timeout-ms: ${EMAIL_TIMEOUT_MS:5000}
   jwt:
     secret: ${JWT_SECRET:change-me-change-me-change-me-change-me}
     access-token-exp-minutes: 30
