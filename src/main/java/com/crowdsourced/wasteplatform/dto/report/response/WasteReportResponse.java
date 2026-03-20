@@ -14,7 +14,9 @@ public class WasteReportResponse {
     UUID id;
     UUID citizenId;
     UUID areaId;
+    String areaName;
     UUID wasteCategoryId;
+    String wasteCategoryName;
     String description;
     BigDecimal estimatedWeightKg;
     BigDecimal actualWeightKg;

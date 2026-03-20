@@ -132,7 +132,9 @@ public class CollectorAssignmentService {
             .collectorStatus(assignment.getCollectorStatus())
             .assignedAt(assignment.getAssignedAt())
             .areaId(report.getAreaId())
+            .areaName(report.getArea() != null ? report.getArea().getName() : null)
             .wasteCategoryId(report.getWasteCategoryId())
+            .wasteCategoryName(report.getWasteCategory() != null ? report.getWasteCategory().getName() : null)
             .addressText(report.getAddressText())
             .currentStatus(report.getCurrentStatus())
             .build();

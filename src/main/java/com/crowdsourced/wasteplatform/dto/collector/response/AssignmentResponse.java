@@ -16,7 +16,9 @@ public class AssignmentResponse {
     Instant assignedAt;
 
     UUID areaId;
+    String areaName;
     UUID wasteCategoryId;
+    String wasteCategoryName;
     String addressText;
     ReportStatus currentStatus;
 }

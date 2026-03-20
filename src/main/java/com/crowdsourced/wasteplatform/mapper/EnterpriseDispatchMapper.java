@@ -9,5 +9,7 @@ import org.mapstruct.Mapping;
 public interface EnterpriseDispatchMapper {
 
     @Mapping(target = "reportId", source = "id")
+    @Mapping(target = "areaName", source = "area.name")
+    @Mapping(target = "wasteCategoryName", source = "wasteCategory.name")
     InboxReportItemResponse toInboxItem(WasteReport report);
 }

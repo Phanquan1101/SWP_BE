@@ -12,7 +12,9 @@ import lombok.Value;
 public class InboxReportItemResponse {
     UUID reportId;
     UUID areaId;
+    String areaName;
     UUID wasteCategoryId;
+    String wasteCategoryName;
     BigDecimal estimatedWeightKg;
     Instant createdAt;
     ReportStatus currentStatus;

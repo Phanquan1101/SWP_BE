@@ -17,6 +17,8 @@ public interface WasteReportMapper {
 
     @Mapping(target = "media", source = "mediaList")
     @Mapping(target = "statusHistory", source = "statusHistory")
+    @Mapping(target = "areaName", source = "report.area.name")
+    @Mapping(target = "wasteCategoryName", source = "report.wasteCategory.name")
     WasteReportResponse toResponse(WasteReport report,
                                    List<ReportMediaResponse> mediaList,
                                    List<ReportStatusHistoryResponse> statusHistory);
