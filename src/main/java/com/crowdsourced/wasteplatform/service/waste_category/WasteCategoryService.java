@@ -58,4 +58,12 @@ public class WasteCategoryService {
         entity.setActive(false);
         repository.save(entity);
     }
+
+    @Transactional
+    public void activate(UUID id) {
+        WasteCategory entity = repository.findById(id)
+            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Waste category not found"));
+        entity.setActive(true);
+        repository.save(entity);
+    }
 }

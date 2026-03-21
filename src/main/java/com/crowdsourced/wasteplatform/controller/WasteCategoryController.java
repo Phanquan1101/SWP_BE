@@ -74,4 +74,11 @@ public class WasteCategoryController {
         service.deactivate(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+
+    @Operation(summary = "Activate waste category")
+    @PatchMapping("/admin/waste-categories/{id}/activate")
+    public ResponseEntity<ApiResponse<Void>> activate(@PathVariable("id") UUID id) {
+        service.activate(id);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }
