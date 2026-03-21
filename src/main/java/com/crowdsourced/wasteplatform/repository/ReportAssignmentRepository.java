@@ -3,6 +3,7 @@ package com.crowdsourced.wasteplatform.repository;
 import com.crowdsourced.wasteplatform.entity.CollectorStatus;
 import com.crowdsourced.wasteplatform.entity.ReportAssignment;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -22,7 +23,11 @@ public interface ReportAssignmentRepository extends JpaRepository<ReportAssignme
 
     Optional<ReportAssignment> findByReportIdAndCollectorId(UUID reportId, UUID collectorId);
 
+    Optional<ReportAssignment> findByReportId(UUID reportId);
+
     boolean existsByReportId(UUID reportId);
+
+    boolean existsByReportIdAndCollectorStatusIn(UUID reportId, Collection<CollectorStatus> statuses);
 
     @Query("""
         select count(ra) from ReportAssignment ra

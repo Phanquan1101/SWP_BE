@@ -24,6 +24,7 @@ import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.repository.UserRoleRepository;
 import com.crowdsourced.wasteplatform.repository.WasteCapabilityRepository;
 import com.crowdsourced.wasteplatform.repository.WasteReportRepository;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -138,16 +139,25 @@ public class DispatchService {
         if (!collector.getAreaId().equals(report.getAreaId())) {
             throw new AppException(ErrorCode.COLLECTOR_AREA_MISMATCH, "Collector area does not match report area");
         }
-        if (assignmentRepository.existsByReportId(report.getId())) {
+        ReportAssignment assignment = assignmentRepository.findByReportId(report.getId())
+            .orElse(null);
+        if (assignment == null) {
+            assignmentRepository.save(ReportAssignment.builder()
+                .reportId(report.getId())
+                .collectorId(collectorUuid)
+                .assignedBy(managerUuid)
+                .collectorStatus(CollectorStatus.ASSIGNED)
+                .build());
+        } else if (assignment.getCollectorStatus() == CollectorStatus.FAILED) {
+            // Schema hiện tại chỉ cho 1 assignment/report, nên re-dispatch sẽ tái sử dụng record FAILED.
+            assignment.setCollectorId(collectorUuid);
+            assignment.setAssignedBy(managerUuid);
+            assignment.setAssignedAt(Instant.now());
+            assignment.setCollectorStatus(CollectorStatus.ASSIGNED);
+            assignmentRepository.save(assignment);
+        } else {
             throw new AppException(ErrorCode.ASSIGNMENT_ALREADY_EXISTS, "Assignment already exists for report");
         }
-
-        assignmentRepository.save(ReportAssignment.builder()
-            .reportId(report.getId())
-            .collectorId(collectorUuid)
-            .assignedBy(managerUuid)
-            .collectorStatus(CollectorStatus.ASSIGNED)
-            .build());
 
         ReportStatus from = report.getCurrentStatus();
         report.setCurrentStatus(ReportStatus.ASSIGNED);

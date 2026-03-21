@@ -4,6 +4,7 @@ import com.crowdsourced.wasteplatform.dto.collector.request.UpdateCollectorStatu
 import com.crowdsourced.wasteplatform.dto.collector.request.UploadProofRequest;
 import com.crowdsourced.wasteplatform.dto.collector.response.AssignmentResponse;
 import com.crowdsourced.wasteplatform.dto.common.PageResponse;
+import com.crowdsourced.wasteplatform.dto.common.request.CancelRequest;
 import com.crowdsourced.wasteplatform.dto.report.response.ReportMediaResponse;
 import com.crowdsourced.wasteplatform.dto.report.response.ReportStatusHistoryResponse;
 import com.crowdsourced.wasteplatform.dto.report.response.WasteReportResponse;
@@ -124,6 +125,47 @@ public class CollectorAssignmentService {
         return toResponse(assignment);
     }
 
+    @Transactional
+    public AssignmentResponse cancelAssignment(String assignmentIdStr, String collectorIdStr, CancelRequest req) {
+        ReportAssignment assignment = loadOwnedAssignment(assignmentIdStr, collectorIdStr);
+        validateCancelReason(req.getReason());
+
+        CollectorStatus assignmentStatus = assignment.getCollectorStatus();
+        if (assignmentStatus != CollectorStatus.ASSIGNED && assignmentStatus != CollectorStatus.ON_THE_WAY) {
+            throw new AppException(
+                ErrorCode.INVALID_ASSIGNMENT_STATUS_FOR_CANCEL,
+                "Collector chi duoc huy assignment o trang thai ASSIGNED hoac ON_THE_WAY"
+            );
+        }
+
+        WasteReport report = loadReport(assignment.getReportId());
+        ReportStatus expectedReportStatus = mapCollectorToReportStatus(assignmentStatus);
+        if (report.getCurrentStatus() != expectedReportStatus) {
+            throw new AppException(
+                ErrorCode.INVALID_REPORT_STATUS_FOR_CANCEL,
+                "Report status khong hop le de collector huy assignment"
+            );
+        }
+
+        // Khong xoa assignment de giu audit, chi danh dau FAILED.
+        assignment.setCollectorStatus(CollectorStatus.FAILED);
+        assignmentRepository.save(assignment);
+
+        // Khi collector huy, report quay lai ACCEPTED de enterprise manager dieu phoi lai.
+        report.setCurrentStatus(ReportStatus.ACCEPTED);
+        reportRepository.save(report);
+
+        historyRepository.save(ReportStatusHistory.builder()
+            .reportId(report.getId())
+            .fromStatus(expectedReportStatus)
+            .toStatus(ReportStatus.ACCEPTED)
+            .changedBy(parseUuid(collectorIdStr, "collectorId"))
+            .note("Collector cancelled: " + req.getReason().trim())
+            .build());
+
+        return toResponse(assignment);
+    }
+
     private AssignmentResponse toResponse(ReportAssignment assignment) {
         WasteReport report = loadReport(assignment.getReportId());
         return AssignmentResponse.builder()
@@ -174,8 +216,12 @@ public class CollectorAssignmentService {
     private ReportAssignment loadOwnedAssignment(String assignmentIdStr, String collectorIdStr) {
         UUID assignmentId = parseUuid(assignmentIdStr, "assignmentId");
         UUID collectorId = parseUuid(collectorIdStr, "collectorId");
-        return assignmentRepository.findByIdAndCollectorId(assignmentId, collectorId)
-            .orElseThrow(() -> new AppException(ErrorCode.REPORT_ACCESS_DENIED, "Assignment not found or not owned by collector"));
+        ReportAssignment assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow(() -> new AppException(ErrorCode.ASSIGNMENT_NOT_FOUND, "Assignment not found"));
+        if (!assignment.getCollectorId().equals(collectorId)) {
+            throw new AppException(ErrorCode.ACCESS_DENIED, "Assignment does not belong to current collector");
+        }
+        return assignment;
     }
 
     private WasteReport loadReport(UUID reportId) {
@@ -240,5 +286,12 @@ public class CollectorAssignmentService {
             + "Best regards,\n"
             + "Waste Management Support Team\n"
             + "Crowdsourced Waste Platform";
+    }
+
+    private void validateCancelReason(String reason) {
+        // Bắt buộc reason để truy vết lý do hủy trong luồng vận hành và khi audit.
+        if (reason == null || reason.trim().length() < 3) {
+            throw new AppException(ErrorCode.CANCEL_REASON_REQUIRED, "Cancel reason must be at least 3 characters");
+        }
     }
 }

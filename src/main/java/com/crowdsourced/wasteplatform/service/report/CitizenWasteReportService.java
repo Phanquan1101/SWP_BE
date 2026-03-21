@@ -1,13 +1,14 @@
 package com.crowdsourced.wasteplatform.service.report;
 
 import com.crowdsourced.wasteplatform.dto.common.PageResponse;
+import com.crowdsourced.wasteplatform.dto.common.request.CancelRequest;
 import com.crowdsourced.wasteplatform.dto.report.request.AddReportImagesRequest;
-import com.crowdsourced.wasteplatform.dto.report.request.CancelWasteReportRequest;
 import com.crowdsourced.wasteplatform.dto.report.request.CreateWasteReportRequest;
 import com.crowdsourced.wasteplatform.dto.report.response.ReportMediaResponse;
 import com.crowdsourced.wasteplatform.dto.report.response.ReportStatusHistoryResponse;
 import com.crowdsourced.wasteplatform.dto.report.response.WasteReportResponse;
 import com.crowdsourced.wasteplatform.entity.Area;
+import com.crowdsourced.wasteplatform.entity.CollectorStatus;
 import com.crowdsourced.wasteplatform.entity.MediaType;
 import com.crowdsourced.wasteplatform.entity.ReportMedia;
 import com.crowdsourced.wasteplatform.entity.ReportStatus;
@@ -21,15 +22,16 @@ import com.crowdsourced.wasteplatform.mapper.ReportMediaMapper;
 import com.crowdsourced.wasteplatform.mapper.ReportStatusHistoryMapper;
 import com.crowdsourced.wasteplatform.mapper.WasteReportMapper;
 import com.crowdsourced.wasteplatform.repository.AreaRepository;
+import com.crowdsourced.wasteplatform.repository.ReportAssignmentRepository;
 import com.crowdsourced.wasteplatform.repository.ReportMediaRepository;
 import com.crowdsourced.wasteplatform.repository.ReportStatusHistoryRepository;
 import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.repository.WasteCategoryRepository;
 import com.crowdsourced.wasteplatform.repository.WasteReportRepository;
 import com.crowdsourced.wasteplatform.service.email.EmailService;
-
 import java.time.Duration;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +49,7 @@ public class CitizenWasteReportService {
     private final WasteReportRepository reportRepository;
     private final AreaRepository areaRepository;
     private final WasteCategoryRepository categoryRepository;
+    private final ReportAssignmentRepository assignmentRepository;
     private final ReportMediaRepository mediaRepository;
     private final ReportStatusHistoryRepository historyRepository;
     private final UserRepository userRepository;
@@ -101,37 +104,28 @@ public class CitizenWasteReportService {
             .note("Citizen created report")
             .changedBy(citizenId)
             .build());
-            User user = userRepository.findById(citizenId)
+
+        User user = userRepository.findById(citizenId)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found."));
 
         String subject = "Waste Report Submitted Successfully";
+        String content =
+            "Dear User,\n\n" +
+            "Thank you for submitting your waste report to our platform.\n\n" +
+            "We have successfully received your report and it is currently being reviewed by our administration team. " +
+            "You will be notified once there is an update regarding its processing status.\n\n" +
+            "Report Details:\n" +
+            "- Description: " + req.getDescription() + "\n" +
+            "- Location: " + req.getAddressText() + "\n" +
+            "- Estimated Weight (kg): " + req.getEstimatedWeightKg() + "\n\n" +
+            "We truly appreciate your contribution in helping us maintain a cleaner and healthier environment.\n\n" +
+            "Best regards,\n" +
+            "Waste Management Support Team\n" +
+            "Crowdsourced Waste Platform";
 
-            String content =
-                "Dear User,\n\n" +
-
-                "Thank you for submitting your waste report to our platform.\n\n" +
-
-                "We have successfully received your report and it is currently being reviewed by our administration team. " +
-                "You will be notified once there is an update regarding its processing status.\n\n" +
-
-                "Report Details:\n" +
-                "- Description: " + req.getDescription() + "\n" +
-                "- Location: " + req.getAddressText() + "\n" +
-                "- Estimated Weight (kg): " + req.getEstimatedWeightKg() + "\n\n" +
-
-                "We truly appreciate your contribution in helping us maintain a cleaner and healthier environment.\n\n" +
-
-                "Best regards,\n" +
-                "Waste Management Support Team\n" +
-                "Crowdsourced Waste Platform";
-
-        // Email khong duoc phep lam fail luong tao report. Neu SMTP loi, he thong van luu report thanh cong.
+        // Email la side-effect: tao report van thanh cong neu gui mail loi.
         try {
-            emailService.sendComplaintResolvedEmail(
-                user.getEmail(),
-                subject,
-                content
-            );
+            emailService.sendComplaintResolvedEmail(user.getEmail(), subject, content);
         } catch (Exception ex) {
             log.warn("Cannot send report confirmation email for report {}", saved.getId(), ex);
         }
@@ -154,15 +148,28 @@ public class CitizenWasteReportService {
     }
 
     @Transactional
-    public WasteReportResponse cancelMyReport(String reportId, String citizenIdStr, CancelWasteReportRequest req) {
+    public WasteReportResponse cancelMyReport(String reportId, String citizenIdStr, CancelRequest req) {
         WasteReport report = loadOwnedReport(reportId, citizenIdStr);
+        validateCancelReason(req.getReason());
+
+        // Citizen chi duoc huy bao cao khi chua vao pha dieu phoi collector.
         if (report.getCurrentStatus() != ReportStatus.PENDING && report.getCurrentStatus() != ReportStatus.ACCEPTED) {
-            throw new AppException(ErrorCode.INVALID_REPORT_STATUS, "Chỉ hủy khi báo cáo đang PENDING hoặc ACCEPTED");
+            throw new AppException(
+                ErrorCode.INVALID_REPORT_STATUS_FOR_CANCEL,
+                "Citizen chi duoc huy bao cao o trang thai PENDING hoac ACCEPTED"
+            );
         }
-        // Nếu đã được assign collector thì không cho hủy
-        if (report.getCurrentStatus() == ReportStatus.ASSIGNED || report.getCurrentStatus() == ReportStatus.ON_THE_WAY
-            || report.getCurrentStatus() == ReportStatus.COLLECTED || report.getCurrentStatus() == ReportStatus.COMPLETED) {
-            throw new AppException(ErrorCode.INVALID_REPORT_STATUS, "Báo cáo đã được xử lý, không thể hủy");
+
+        // Neu assignment dang hoat dong thi khoa huy de tranh conflict voi dieu phoi.
+        boolean hasActiveAssignment = assignmentRepository.existsByReportIdAndCollectorStatusIn(
+            report.getId(),
+            EnumSet.of(CollectorStatus.ASSIGNED, CollectorStatus.ON_THE_WAY)
+        );
+        if (hasActiveAssignment) {
+            throw new AppException(
+                ErrorCode.INVALID_REPORT_STATUS_FOR_CANCEL,
+                "Report dang co assignment active, khong the huy"
+            );
         }
 
         ReportStatus fromStatus = report.getCurrentStatus();
@@ -173,7 +180,7 @@ public class CitizenWasteReportService {
             .reportId(report.getId())
             .fromStatus(fromStatus)
             .toStatus(ReportStatus.CANCELLED)
-            .note(req.getReason())
+            .note(req.getReason().trim())
             .changedBy(parseUuid(citizenIdStr, "citizenId"))
             .build());
 
@@ -184,7 +191,7 @@ public class CitizenWasteReportService {
     public WasteReportResponse addReportImages(String reportId, String citizenIdStr, AddReportImagesRequest req) {
         WasteReport report = loadOwnedReport(reportId, citizenIdStr);
         if (report.getCurrentStatus() != ReportStatus.PENDING) {
-            throw new AppException(ErrorCode.INVALID_REPORT_STATUS, "Chỉ thêm ảnh khi báo cáo đang PENDING");
+            throw new AppException(ErrorCode.INVALID_REPORT_STATUS, "Chi them anh khi bao cao dang PENDING");
         }
         for (String url : req.getImageUrls()) {
             mediaRepository.save(ReportMedia.builder()
@@ -221,6 +228,13 @@ public class CitizenWasteReportService {
             return UUID.fromString(value);
         } catch (Exception ex) {
             throw new AppException(ErrorCode.BAD_REQUEST, "Invalid UUID for " + field);
+        }
+    }
+
+    private void validateCancelReason(String reason) {
+        // Bat buoc reason de minh bach audit va tra loi khi co tranh chap.
+        if (reason == null || reason.trim().length() < 3) {
+            throw new AppException(ErrorCode.CANCEL_REASON_REQUIRED, "Cancel reason must be at least 3 characters");
         }
     }
 }

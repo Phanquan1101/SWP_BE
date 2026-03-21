@@ -4,6 +4,7 @@ import com.crowdsourced.wasteplatform.dto.collector.request.UpdateCollectorStatu
 import com.crowdsourced.wasteplatform.dto.collector.request.UploadProofRequest;
 import com.crowdsourced.wasteplatform.dto.collector.response.AssignmentResponse;
 import com.crowdsourced.wasteplatform.dto.common.PageResponse;
+import com.crowdsourced.wasteplatform.dto.common.request.CancelRequest;
 import com.crowdsourced.wasteplatform.dto.report.response.WasteReportResponse;
 import com.crowdsourced.wasteplatform.exception.ApiResponse;
 import com.crowdsourced.wasteplatform.service.collector.CollectorAssignmentService;
@@ -66,6 +67,18 @@ public class CollectorAssignmentController {
         @Valid @RequestBody UploadProofRequest request
     ) {
         return ApiResponse.success(service.uploadProof(id, currentUserId(), request));
+    }
+
+    @PostMapping("/{id}/cancel")
+    @Operation(
+        summary = "Collector huy assignment",
+        description = "Collector chi duoc huy khi assignment dang ASSIGNED hoac ON_THE_WAY; report se quay ve ACCEPTED de enterprise dieu phoi lai."
+    )
+    public ApiResponse<AssignmentResponse> cancelAssignment(
+        @PathVariable String id,
+        @Valid @RequestBody CancelRequest request
+    ) {
+        return ApiResponse.success(service.cancelAssignment(id, currentUserId(), request));
     }
 
     private String currentUserId() {
