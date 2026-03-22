@@ -43,6 +43,7 @@ public enum ErrorCode {
     VOUCHER_INSUFFICIENT_POINTS("VOUCHER_INSUFFICIENT_POINTS", HttpStatus.BAD_REQUEST, "Insufficient points"),
     VOUCHER_REDEEM_FAILED("VOUCHER_REDEEM_FAILED", HttpStatus.CONFLICT, "Voucher redeem failed"),
     INVALID_VOUCHER_STOCK("INVALID_VOUCHER_STOCK", HttpStatus.BAD_REQUEST, "Invalid voucher stock"),
+    RATE_LIMIT_EXCEEDED("RATE_LIMIT_EXCEEDED", HttpStatus.TOO_MANY_REQUESTS, "Rate limit exceeded"),
     INTERNAL("INTERNAL", HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
 
     private final String code;
