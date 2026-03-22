@@ -79,4 +79,13 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, UUID> 
         ORDER BY month ASC
         """, nativeQuery = true)
     List<AdminReportsByMonthProjection> countReportsByMonth(@Param("year") int year);
+
+    @Query("""
+        select coalesce(sum(coalesce(wr.actualWeightKg, wr.estimatedWeightKg)), 0)
+        from WasteReport wr
+        where wr.citizenId = :citizenId
+          and wr.currentStatus in :statuses
+        """)
+    BigDecimal sumCollectedKgByCitizenId(@Param("citizenId") UUID citizenId,
+                                         @Param("statuses") List<ReportStatus> statuses);
 }
