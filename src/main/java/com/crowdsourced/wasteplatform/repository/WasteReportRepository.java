@@ -24,6 +24,14 @@ public interface WasteReportRepository extends JpaRepository<WasteReport, UUID> 
 
     Optional<WasteReport> findByIdAndCitizenId(UUID id, UUID citizenId);
 
+    boolean existsByCitizenIdAndAreaIdAndWasteCategoryIdAndCreatedAtGreaterThanEqualAndCurrentStatusIn(
+        UUID citizenId,
+        UUID areaId,
+        UUID wasteCategoryId,
+        Instant createdAt,
+        List<ReportStatus> statuses
+    );
+
     @Query("""
         select wr from WasteReport wr
         where (:areaId is null or wr.areaId = :areaId)

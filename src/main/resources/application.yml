@@ -45,6 +45,8 @@ app:
     citizen-reports:
       max-requests: 5
       window-seconds: 60
+  duplicate-report:
+    lookback-minutes: 10
 
 springdoc:
   api-docs:

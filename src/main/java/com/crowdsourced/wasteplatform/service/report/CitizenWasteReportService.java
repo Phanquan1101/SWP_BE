@@ -34,17 +34,25 @@ import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class CitizenWasteReportService {
+
+    private static final List<ReportStatus> DUPLICATE_ACTIVE_STATUSES = List.of(
+        ReportStatus.PENDING,
+        ReportStatus.ACCEPTED,
+        ReportStatus.ASSIGNED,
+        ReportStatus.ON_THE_WAY,
+        ReportStatus.COLLECTED,
+        ReportStatus.COMPLETED
+    );
 
     private final WasteReportRepository reportRepository;
     private final AreaRepository areaRepository;
@@ -57,6 +65,35 @@ public class CitizenWasteReportService {
     private final ReportStatusHistoryMapper historyMapper;
     private final WasteReportMapper reportMapper;
     private final EmailService emailService;
+    private final long duplicateLookbackMinutes;
+
+    public CitizenWasteReportService(
+        WasteReportRepository reportRepository,
+        AreaRepository areaRepository,
+        WasteCategoryRepository categoryRepository,
+        ReportAssignmentRepository assignmentRepository,
+        ReportMediaRepository mediaRepository,
+        ReportStatusHistoryRepository historyRepository,
+        UserRepository userRepository,
+        ReportMediaMapper mediaMapper,
+        ReportStatusHistoryMapper historyMapper,
+        WasteReportMapper reportMapper,
+        EmailService emailService,
+        @Value("${app.duplicate-report.lookback-minutes:10}") long duplicateLookbackMinutes
+    ) {
+        this.reportRepository = reportRepository;
+        this.areaRepository = areaRepository;
+        this.categoryRepository = categoryRepository;
+        this.assignmentRepository = assignmentRepository;
+        this.mediaRepository = mediaRepository;
+        this.historyRepository = historyRepository;
+        this.userRepository = userRepository;
+        this.mediaMapper = mediaMapper;
+        this.historyMapper = historyMapper;
+        this.reportMapper = reportMapper;
+        this.emailService = emailService;
+        this.duplicateLookbackMinutes = duplicateLookbackMinutes;
+    }
 
     @Transactional
     public WasteReportResponse createReport(CreateWasteReportRequest req, String citizenIdStr) {
@@ -70,6 +107,8 @@ public class CitizenWasteReportService {
         WasteCategory category = categoryRepository.findById(categoryId)
             .filter(WasteCategory::isActive)
             .orElseThrow(() -> new AppException(ErrorCode.WASTE_CATEGORY_NOT_FOUND, "Waste category not found or inactive"));
+
+        checkDuplicateReport(citizenId, area.getId(), category.getId());
 
         Instant now = Instant.now();
         Instant allowEditUntil = now.plus(Duration.ofMinutes(15));
@@ -235,6 +274,26 @@ public class CitizenWasteReportService {
         // Bat buoc reason de minh bach audit va tra loi khi co tranh chap.
         if (reason == null || reason.trim().length() < 3) {
             throw new AppException(ErrorCode.CANCEL_REASON_REQUIRED, "Cancel reason must be at least 3 characters");
+        }
+    }
+
+    private void checkDuplicateReport(UUID citizenId, UUID areaId, UUID wasteCategoryId) {
+        // Chong spam bao cao trung lap: cung citizen + area + category trong cua so thoi gian ngan.
+        Instant lookbackFrom = Instant.now().minus(Duration.ofMinutes(duplicateLookbackMinutes));
+        boolean duplicateFound = reportRepository
+            .existsByCitizenIdAndAreaIdAndWasteCategoryIdAndCreatedAtGreaterThanEqualAndCurrentStatusIn(
+                citizenId,
+                areaId,
+                wasteCategoryId,
+                lookbackFrom,
+                DUPLICATE_ACTIVE_STATUSES
+            );
+
+        if (duplicateFound) {
+            throw new AppException(
+                ErrorCode.DUPLICATE_REPORT,
+                "Bạn đã gửi báo cáo tương tự trong thời gian gần đây"
+            );
         }
     }
 }
