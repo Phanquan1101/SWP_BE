@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 import com.crowdsourced.wasteplatform.config.CitizenReportRateLimitFilter;
+import com.crowdsourced.wasteplatform.service.monitoring.WasteMetricsService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +29,8 @@ class CitizenReportRateLimitFilterTest {
 
     @Mock
     private StringRedisTemplate redisTemplate;
+    @Mock
+    private WasteMetricsService wasteMetricsService;
 
     private AutoCloseable mocks;
     private ObjectMapper objectMapper;
@@ -37,7 +40,7 @@ class CitizenReportRateLimitFilterTest {
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
         objectMapper = new ObjectMapper().findAndRegisterModules();
-        filter = new CitizenReportRateLimitFilter(redisTemplate, objectMapper, 5, 60);
+        filter = new CitizenReportRateLimitFilter(redisTemplate, objectMapper, wasteMetricsService, 5, 60);
 
         UUID userId = UUID.randomUUID();
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

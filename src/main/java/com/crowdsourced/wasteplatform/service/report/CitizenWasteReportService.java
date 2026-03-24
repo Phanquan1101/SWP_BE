@@ -29,6 +29,8 @@ import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.repository.WasteCategoryRepository;
 import com.crowdsourced.wasteplatform.repository.WasteReportRepository;
 import com.crowdsourced.wasteplatform.service.email.EmailService;
+import com.crowdsourced.wasteplatform.service.monitoring.WasteMetricsService;
+import io.micrometer.core.instrument.Timer;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumSet;
@@ -65,6 +67,7 @@ public class CitizenWasteReportService {
     private final ReportStatusHistoryMapper historyMapper;
     private final WasteReportMapper reportMapper;
     private final EmailService emailService;
+    private final WasteMetricsService wasteMetricsService;
     private final long duplicateLookbackMinutes;
 
     public CitizenWasteReportService(
@@ -79,6 +82,7 @@ public class CitizenWasteReportService {
         ReportStatusHistoryMapper historyMapper,
         WasteReportMapper reportMapper,
         EmailService emailService,
+        WasteMetricsService wasteMetricsService,
         @Value("${app.duplicate-report.lookback-minutes:10}") long duplicateLookbackMinutes
     ) {
         this.reportRepository = reportRepository;
@@ -92,84 +96,93 @@ public class CitizenWasteReportService {
         this.historyMapper = historyMapper;
         this.reportMapper = reportMapper;
         this.emailService = emailService;
+        this.wasteMetricsService = wasteMetricsService;
         this.duplicateLookbackMinutes = duplicateLookbackMinutes;
     }
 
     @Transactional
     public WasteReportResponse createReport(CreateWasteReportRequest req, String citizenIdStr) {
-        UUID citizenId = parseUuid(citizenIdStr, "citizenId");
-        UUID areaId = parseUuid(req.getAreaId(), "areaId");
-        UUID categoryId = parseUuid(req.getWasteCategoryId(), "wasteCategoryId");
-
-        Area area = areaRepository.findById(areaId)
-            .filter(Area::isActive)
-            .orElseThrow(() -> new AppException(ErrorCode.AREA_NOT_FOUND, "Area not found or inactive"));
-        WasteCategory category = categoryRepository.findById(categoryId)
-            .filter(WasteCategory::isActive)
-            .orElseThrow(() -> new AppException(ErrorCode.WASTE_CATEGORY_NOT_FOUND, "Waste category not found or inactive"));
-
-        checkDuplicateReport(citizenId, area.getId(), category.getId());
-
-        Instant now = Instant.now();
-        Instant allowEditUntil = now.plus(Duration.ofMinutes(15));
-
-        WasteReport report = WasteReport.builder()
-            .citizenId(citizenId)
-            .areaId(area.getId())
-            .wasteCategoryId(category.getId())
-            .description(req.getDescription())
-            .estimatedWeightKg(req.getEstimatedWeightKg())
-            .addressText(req.getAddressText())
-            .currentStatus(ReportStatus.PENDING)
-            .allowEditUntil(allowEditUntil)
-            .build();
-        WasteReport saved = reportRepository.save(report);
-
-        if (req.getImageUrls() != null && !req.getImageUrls().isEmpty()) {
-            for (String url : req.getImageUrls()) {
-                mediaRepository.save(ReportMedia.builder()
-                    .reportId(saved.getId())
-                    .mediaType(MediaType.REPORT_IMAGE)
-                    .url(url)
-                    .createdBy(citizenId)
-                    .build());
-            }
-        }
-
-        historyRepository.save(ReportStatusHistory.builder()
-            .reportId(saved.getId())
-            .fromStatus(null)
-            .toStatus(ReportStatus.PENDING)
-            .note("Citizen created report")
-            .changedBy(citizenId)
-            .build());
-
-        User user = userRepository.findById(citizenId)
-            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found."));
-
-        String subject = "Waste Report Submitted Successfully";
-        String content =
-            "Dear User,\n\n" +
-            "Thank you for submitting your waste report to our platform.\n\n" +
-            "We have successfully received your report and it is currently being reviewed by our administration team. " +
-            "You will be notified once there is an update regarding its processing status.\n\n" +
-            "Report Details:\n" +
-            "- Description: " + req.getDescription() + "\n" +
-            "- Location: " + req.getAddressText() + "\n" +
-            "- Estimated Weight (kg): " + req.getEstimatedWeightKg() + "\n\n" +
-            "We truly appreciate your contribution in helping us maintain a cleaner and healthier environment.\n\n" +
-            "Best regards,\n" +
-            "Waste Management Support Team\n" +
-            "Crowdsourced Waste Platform";
-
-        // Email la side-effect: tao report van thanh cong neu gui mail loi.
+        Timer.Sample sample = wasteMetricsService.startSample();
         try {
-            emailService.sendComplaintResolvedEmail(user.getEmail(), subject, content);
-        } catch (Exception ex) {
-            log.warn("Cannot send report confirmation email for report {}", saved.getId(), ex);
-        }
+            UUID citizenId = parseUuid(citizenIdStr, "citizenId");
+            UUID areaId = parseUuid(req.getAreaId(), "areaId");
+            UUID categoryId = parseUuid(req.getWasteCategoryId(), "wasteCategoryId");
 
-        return enrich(saved);
+            Area area = areaRepository.findById(areaId)
+                .filter(Area::isActive)
+                .orElseThrow(() -> new AppException(ErrorCode.AREA_NOT_FOUND, "Area not found or inactive"));
+            WasteCategory category = categoryRepository.findById(categoryId)
+                .filter(WasteCategory::isActive)
+                .orElseThrow(() -> new AppException(ErrorCode.WASTE_CATEGORY_NOT_FOUND, "Waste category not found or inactive"));
+
+            checkDuplicateReport(citizenId, area.getId(), category.getId());
+
+            Instant now = Instant.now();
+            Instant allowEditUntil = now.plus(Duration.ofMinutes(15));
+
+            WasteReport report = WasteReport.builder()
+                .citizenId(citizenId)
+                .areaId(area.getId())
+                .wasteCategoryId(category.getId())
+                .description(req.getDescription())
+                .estimatedWeightKg(req.getEstimatedWeightKg())
+                .addressText(req.getAddressText())
+                .currentStatus(ReportStatus.PENDING)
+                .allowEditUntil(allowEditUntil)
+                .build();
+            WasteReport saved = reportRepository.save(report);
+
+            if (req.getImageUrls() != null && !req.getImageUrls().isEmpty()) {
+                for (String url : req.getImageUrls()) {
+                    mediaRepository.save(ReportMedia.builder()
+                        .reportId(saved.getId())
+                        .mediaType(MediaType.REPORT_IMAGE)
+                        .url(url)
+                        .createdBy(citizenId)
+                        .build());
+                }
+            }
+
+            historyRepository.save(ReportStatusHistory.builder()
+                .reportId(saved.getId())
+                .fromStatus(null)
+                .toStatus(ReportStatus.PENDING)
+                .note("Citizen created report")
+                .changedBy(citizenId)
+                .build());
+
+            User user = userRepository.findById(citizenId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found."));
+
+            String subject = "Waste Report Submitted Successfully";
+            String content =
+                "Dear User,\n\n" +
+                "Thank you for submitting your waste report to our platform.\n\n" +
+                "We have successfully received your report and it is currently being reviewed by our administration team. " +
+                "You will be notified once there is an update regarding its processing status.\n\n" +
+                "Report Details:\n" +
+                "- Description: " + req.getDescription() + "\n" +
+                "- Location: " + req.getAddressText() + "\n" +
+                "- Estimated Weight (kg): " + req.getEstimatedWeightKg() + "\n\n" +
+                "We truly appreciate your contribution in helping us maintain a cleaner and healthier environment.\n\n" +
+                "Best regards,\n" +
+                "Waste Management Support Team\n" +
+                "Crowdsourced Waste Platform";
+
+            // Email la side-effect: tao report van thanh cong neu gui mail loi.
+            try {
+                emailService.sendComplaintResolvedEmail(user.getEmail(), subject, content);
+            } catch (Exception ex) {
+                log.warn("Cannot send report confirmation email for report {}", saved.getId(), ex);
+            }
+
+            wasteMetricsService.incrementReportCreatedAfterCommit();
+            wasteMetricsService.recordReportCreateLatency(sample, true);
+            return enrich(saved);
+        } catch (RuntimeException ex) {
+            wasteMetricsService.recordReportCreateLatency(sample, false);
+            throw ex;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -290,6 +303,7 @@ public class CitizenWasteReportService {
             );
 
         if (duplicateFound) {
+            wasteMetricsService.incrementReportDuplicateBlocked();
             throw new AppException(
                 ErrorCode.DUPLICATE_REPORT,
                 "Bạn đã gửi báo cáo tương tự trong thời gian gần đây"

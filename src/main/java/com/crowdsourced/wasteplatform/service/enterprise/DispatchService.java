@@ -24,6 +24,7 @@ import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.repository.UserRoleRepository;
 import com.crowdsourced.wasteplatform.repository.WasteCapabilityRepository;
 import com.crowdsourced.wasteplatform.repository.WasteReportRepository;
+import com.crowdsourced.wasteplatform.service.monitoring.WasteMetricsService;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -48,6 +49,7 @@ public class DispatchService {
     private final ReportMediaMapper mediaMapper;
     private final ReportStatusHistoryMapper historyMapper;
     private final WasteReportMapper reportMapper;
+    private final WasteMetricsService wasteMetricsService;
 
     @Transactional(readOnly = true)
     public PageResponse<InboxReportItemResponse> getInbox(String areaIdOptional, String statusOptional, Pageable pageable) {
@@ -169,6 +171,7 @@ public class DispatchService {
             .changedBy(managerUuid)
             .note("Assigned to collector " + collectorUuid)
             .build());
+        wasteMetricsService.incrementReportAssignedAfterCommit();
 
         return enrichReport(report);
     }

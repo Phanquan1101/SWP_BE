@@ -33,6 +33,7 @@ import com.crowdsourced.wasteplatform.repository.NotificationRepository;
 import com.crowdsourced.wasteplatform.repository.UserNotificationRepository;
 import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.service.email.EmailService;
+import com.crowdsourced.wasteplatform.service.monitoring.WasteMetricsService;
 import com.crowdsourced.wasteplatform.utils.SecurityUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,9 @@ public class ComplaintService {
     private final ComplaintMapper complaintMapper;
     private final EmailService emailService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final WasteMetricsService wasteMetricsService;
 
+    @Transactional
     public ComplaintResponse createdComplaint(Principal principal, CreateComplaintRequest request){
         User user = securityUtil.getLoginUser(principal);
         Complaint complaint = Complaint.builder()
@@ -63,6 +66,7 @@ public class ComplaintService {
             .status(ComplaintStatus.IN_REVIEW)
             .build();
         Complaint saved = complaintRepository.save(complaint);
+        wasteMetricsService.incrementComplaintCreatedAfterCommit();
 
         messagingTemplate.convertAndSend(
         "/topic/admin-notifications",

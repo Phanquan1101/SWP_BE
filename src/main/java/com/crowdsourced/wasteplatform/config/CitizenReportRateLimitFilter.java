@@ -1,6 +1,7 @@
 package com.crowdsourced.wasteplatform.config;
 
 import com.crowdsourced.wasteplatform.exception.ApiResponse;
+import com.crowdsourced.wasteplatform.service.monitoring.WasteMetricsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -45,15 +46,18 @@ public class CitizenReportRateLimitFilter extends OncePerRequestFilter {
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
+    private final WasteMetricsService wasteMetricsService;
     private final int maxRequestsPerWindow;
     private final Duration windowDuration;
 
     public CitizenReportRateLimitFilter(StringRedisTemplate redisTemplate,
                                         ObjectMapper objectMapper,
+                                        WasteMetricsService wasteMetricsService,
                                         @Value("${app.rate-limit.citizen-reports.max-requests:5}") int maxRequestsPerWindow,
                                         @Value("${app.rate-limit.citizen-reports.window-seconds:60}") long windowSeconds) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
+        this.wasteMetricsService = wasteMetricsService;
         this.maxRequestsPerWindow = maxRequestsPerWindow;
         this.windowDuration = Duration.ofSeconds(windowSeconds);
     }
@@ -111,6 +115,7 @@ public class CitizenReportRateLimitFilter extends OncePerRequestFilter {
     }
 
     private void writeRateLimitExceeded(HttpServletResponse response) throws IOException {
+        wasteMetricsService.incrementRateLimitBlocked();
         response.setStatus(HTTP_TOO_MANY_REQUESTS);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");

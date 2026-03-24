@@ -18,6 +18,8 @@ import com.crowdsourced.wasteplatform.repository.PointTransactionRepository;
 import com.crowdsourced.wasteplatform.repository.UserRepository;
 import com.crowdsourced.wasteplatform.repository.VoucherRedemptionRepository;
 import com.crowdsourced.wasteplatform.repository.VoucherRepository;
+import com.crowdsourced.wasteplatform.service.monitoring.WasteMetricsService;
+import io.micrometer.core.instrument.Timer;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -56,6 +58,7 @@ public class CitizenVoucherService {
     private final UserRepository userRepository;
     private final VoucherMapper voucherMapper;
     private final VoucherRedemptionMapper voucherRedemptionMapper;
+    private final WasteMetricsService wasteMetricsService;
 
     @Transactional(readOnly = true)
     public PageResponse<VoucherResponse> getPublicVouchers(String citizenIdOrNull, Pageable pageable) {
@@ -85,59 +88,69 @@ public class CitizenVoucherService {
 
     @Transactional
     public RedeemVoucherResponse redeemVoucher(String voucherId, String citizenId) {
-        UUID citizenUuid = parseUuid(citizenId, "citizenId");
-        // Khoa user de ngan race condition tru diem 2 lan khi user bam redeem dong thoi.
-        User user = userRepository.findByIdForUpdate(citizenUuid)
-            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found"));
+        Timer.Sample sample = wasteMetricsService.startSample();
+        try {
+            UUID citizenUuid = parseUuid(citizenId, "citizenId");
+            // Khoa user de ngan race condition tru diem 2 lan khi user bam redeem dong thoi.
+            User user = userRepository.findByIdForUpdate(citizenUuid)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found"));
 
-        // Khoa voucher de ngan stock bi tru am khi co nhieu request cung luc.
-        Voucher voucher = voucherRepository.findByIdForUpdate(parseUuid(voucherId, "voucherId"))
-            .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND, "Voucher not found"));
+            // Khoa voucher de ngan stock bi tru am khi co nhieu request cung luc.
+            Voucher voucher = voucherRepository.findByIdForUpdate(parseUuid(voucherId, "voucherId"))
+                .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND, "Voucher not found"));
 
-        VoucherDisplayStatus status = computeVoucherDisplayStatus(voucher, Instant.now());
-        validateVoucherRedeemable(status);
+            VoucherDisplayStatus status = computeVoucherDisplayStatus(voucher, Instant.now());
+            validateVoucherRedeemable(status);
 
-        long currentPoints = pointTransactionRepository.sumPointsByUserId(user.getId());
-        int pointsCost = safeNonNegative(voucher.getPointsCost(), ErrorCode.VOUCHER_REDEEM_FAILED, "Voucher pointsCost invalid");
-        if (currentPoints < pointsCost) {
-            long missingPoints = pointsCost - currentPoints;
-            throw new AppException(
-                ErrorCode.VOUCHER_INSUFFICIENT_POINTS,
-                "Thieu " + missingPoints + " diem de doi voucher"
-            );
+            long currentPoints = pointTransactionRepository.sumPointsByUserId(user.getId());
+            int pointsCost = safeNonNegative(voucher.getPointsCost(), ErrorCode.VOUCHER_REDEEM_FAILED, "Voucher pointsCost invalid");
+            if (currentPoints < pointsCost) {
+                long missingPoints = pointsCost - currentPoints;
+                throw new AppException(
+                    ErrorCode.VOUCHER_INSUFFICIENT_POINTS,
+                    "Thieu " + missingPoints + " diem de doi voucher"
+                );
+            }
+
+            voucher.setStock(voucher.getStock() - 1);
+            voucherRepository.save(voucher);
+
+            String redeemCode = generateRedeemCode();
+            VoucherRedemption redemption = voucherRedemptionRepository.save(VoucherRedemption.builder()
+                .voucherId(voucher.getId())
+                .userId(user.getId())
+                .redeemCode(redeemCode)
+                .status("ISSUED")
+                .note(null)
+                .build());
+
+            pointTransactionRepository.save(PointTransaction.builder()
+                .userId(user.getId())
+                .reportId(null)
+                .txType(TxType.REDEEM)
+                .points(-pointsCost)
+                .description(REDEEM_NOTE_TEMPLATE.formatted(voucher.getCode()))
+                .build());
+
+            wasteMetricsService.incrementVoucherRedeemSuccessAfterCommit();
+            wasteMetricsService.recordVoucherRedeemLatency(sample, true);
+
+            long remainingPoints = currentPoints - pointsCost;
+            return RedeemVoucherResponse.builder()
+                .redemptionId(redemption.getId())
+                .voucherId(voucher.getId())
+                .voucherCode(voucher.getCode())
+                .voucherTitle(voucher.getTitle())
+                .redeemCode(redemption.getRedeemCode())
+                .redeemedAt(redemption.getRedeemedAt())
+                .remainingPoints(remainingPoints)
+                .message(REDEEM_SUCCESS_MESSAGE)
+                .build();
+        } catch (RuntimeException ex) {
+            wasteMetricsService.incrementVoucherRedeemFailed();
+            wasteMetricsService.recordVoucherRedeemLatency(sample, false);
+            throw ex;
         }
-
-        voucher.setStock(voucher.getStock() - 1);
-        voucherRepository.save(voucher);
-
-        String redeemCode = generateRedeemCode();
-        VoucherRedemption redemption = voucherRedemptionRepository.save(VoucherRedemption.builder()
-            .voucherId(voucher.getId())
-            .userId(user.getId())
-            .redeemCode(redeemCode)
-            .status("ISSUED")
-            .note(null)
-            .build());
-
-        pointTransactionRepository.save(PointTransaction.builder()
-            .userId(user.getId())
-            .reportId(null)
-            .txType(TxType.REDEEM)
-            .points(-pointsCost)
-            .description(REDEEM_NOTE_TEMPLATE.formatted(voucher.getCode()))
-            .build());
-
-        long remainingPoints = currentPoints - pointsCost;
-        return RedeemVoucherResponse.builder()
-            .redemptionId(redemption.getId())
-            .voucherId(voucher.getId())
-            .voucherCode(voucher.getCode())
-            .voucherTitle(voucher.getTitle())
-            .redeemCode(redemption.getRedeemCode())
-            .redeemedAt(redemption.getRedeemedAt())
-            .remainingPoints(remainingPoints)
-            .message(REDEEM_SUCCESS_MESSAGE)
-            .build();
     }
 
     @Transactional(readOnly = true)
