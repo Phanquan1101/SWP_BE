@@ -40,14 +40,14 @@ public class AdminUserController {
     }
 
     @GetMapping
-    @Operation(summary = "Search users")
+    @Operation(summary = "Get list of user")
     public ApiResponse<PageResponse<UserSummaryResponse>> searchUsers(
-        @RequestParam(required = false) String q,
+        @RequestParam(required = false) String searchTerm,
         @RequestParam(name = "role", required = false) String roleCode,
         @RequestParam(required = false) String status,
         @ParameterObject Pageable pageable
     ) {
-        return ApiResponse.success(adminUserService.searchUsers(q, roleCode, status, pageable));
+        return ApiResponse.success(adminUserService.searchUsers(searchTerm, roleCode, status, pageable));
     }
 
     @GetMapping("/{userId}")
