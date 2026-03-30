@@ -73,34 +73,42 @@ public class WasteMetricsService {
     }
 
     public Timer.Sample startSample() {
+
         return Timer.start(meterRegistry);
     }
 
     public void incrementReportCreatedAfterCommit() {
+
         runAfterCommit(reportCreatedCounter::increment);
     }
 
     public void incrementReportDuplicateBlocked() {
+
         reportDuplicateBlockedCounter.increment();
     }
 
     public void incrementRateLimitBlocked() {
+
         rateLimitBlockedCounter.increment();
     }
 
     public void incrementVoucherRedeemSuccessAfterCommit() {
+
         runAfterCommit(voucherRedeemSuccessCounter::increment);
     }
 
     public void incrementVoucherRedeemFailed() {
+
         voucherRedeemFailedCounter.increment();
     }
 
     public void incrementComplaintCreatedAfterCommit() {
+
         runAfterCommit(complaintCreatedCounter::increment);
     }
 
     public void incrementReportAssignedAfterCommit() {
+
         runAfterCommit(reportAssignedCounter::increment);
     }
 
