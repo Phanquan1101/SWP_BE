@@ -30,6 +30,7 @@ public class CitizenWasteReportController {
     private final CitizenWasteReportService service;
 
     public CitizenWasteReportController(CitizenWasteReportService service) {
+
         this.service = service;
     }
 
